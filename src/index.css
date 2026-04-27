@@ -1,0 +1,54 @@
+:root {
+  --bg: #faf7f2;
+  --bg-elevated: #ffffff;
+  --surface: #f4efe7;
+  --surface-strong: #ece5d7;
+  --border: #d9cfbb;
+  --border-strong: #b6a888;
+  --text: #2b2a28;
+  --text-muted: #6b6659;
+  --text-faint: #a19a8c;
+  --accent: #b4844b;
+  --accent-strong: #8b5e21;
+  --accent-soft: #f1e4cc;
+  --accent-glow: rgba(180, 132, 75, 0.25);
+  --success: #3f7a3a;
+  --success-strong: #2a5a27;
+  --danger: #b94b3b;
+  --shadow-sm: 0 1px 2px rgba(30, 20, 0, 0.04), 0 1px 1px rgba(30, 20, 0, 0.03);
+  --shadow-md:
+    0 4px 14px rgba(30, 20, 0, 0.08), 0 1px 3px rgba(30, 20, 0, 0.04);
+  --shadow-glow:
+    0 0 0 2px rgba(180, 132, 75, 0.18), 0 6px 22px rgba(180, 132, 75, 0.22);
+  --shadow-glow-green:
+    0 0 0 2px rgba(63, 122, 58, 0.18), 0 6px 22px rgba(63, 122, 58, 0.22);
+  --font:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Cormorant Garamond", "Playfair Display", Georgia, serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}

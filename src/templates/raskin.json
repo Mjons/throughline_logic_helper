@@ -1,0 +1,235 @@
+```json
+{
+  "id": "panel-haus-raskin",
+  "name": "Panel Haus — Raskin / Fairytale Pitch",
+  "description": "Panel Haus's populated Raskin pitch: visual storytelling won, AI removed the drawing barrier, gatekeepers and ownership-trap platforms are about to close the door — Panel Haus is the AI-native studio that lets anyone make a publishable comic chapter in an hour and keep it.",
+  "beats": [
+    {
+      "id": "river",
+      "name": "The River",
+      "subtitle": "Name the undeniable shift",
+      "prompt": "What big change in the world is sweeping us forward — right now, unavoidably?",
+      "options": [
+        {
+          "id": "river-ai-quality-threshold",
+          "title": "AI image generation crossed the editorial-quality threshold",
+          "description": "In the last 18 months, character consistency, style control, and pacing-aware generation became real. The tech bottleneck is gone.",
+          "chosen": true,
+          "spokenLine": "In the last 18 months, AI image generation crossed the quality threshold. The tech bottleneck is gone. But here's what hasn't changed: who gets to make comics."
+        },
+        {
+          "id": "river-visual-storytelling-dominance",
+          "title": "Visual storytelling became the default cultural medium",
+          "description": "Manga outsells all of American publishing combined. Webtoon at 90M users. TikTok proved if you can't show it, it doesn't exist.",
+          "chosen": false,
+          "rejectedBecause": "True, but folded in as compounding context inside the chosen beat — not strong enough alone to anchor the river."
+        },
+        {
+          "id": "river-ai-copyright-shift",
+          "title": "Regulatory shift on AI ownership and copyright",
+          "description": "Courts and governments are reshaping who owns AI-generated content.",
+          "chosen": false,
+          "rejectedBecause": "A tailwind, not the river. Use as supporting evidence in the troll beat (ownership trap)."
+        },
+        {
+          "id": "river-illustration-cost-collapse",
+          "title": "Cost of illustration collapsed against unchanged human-artist rates",
+          "description": "Per-page AI cost went from artisan-tier to near-zero while $500/page artist rates held steady.",
+          "chosen": false,
+          "rejectedBecause": "Derivative of the technology shift; weaker as a standalone undeniable shift."
+        }
+      ]
+    },
+    {
+      "id": "fork",
+      "name": "The Fork",
+      "subtitle": "Winners & losers at the crossroads",
+      "prompt": "Who adapts to the new river — and who gets left behind?",
+      "options": [
+        {
+          "id": "fork-incumbents-weaponize",
+          "title": "Incumbents weaponize AI to reinforce gatekeeping",
+          "description": "Webtoon, Marvel, DC, Shueisha bolt AI onto existing pipelines to make their already-approved creators faster — not to open the gate. Democratization window closes.",
+          "chosen": true,
+          "spokenLine": "The window is closing. Incumbents will use AI to reinforce gatekeeping — faster production for the same approved creators. If we don't build the democratized path now, the access window shuts."
+        },
+        {
+          "id": "fork-adapters-compound",
+          "title": "Adapters compound, holdouts decay",
+          "description": "Generic 'those who move now win' framing.",
+          "chosen": false,
+          "rejectedBecause": "Too vague to create urgency. James's coaching: stakes need a face."
+        },
+        {
+          "id": "fork-sora-cautionary",
+          "title": "Sora-style cautionary tale",
+          "description": "Platforms shut down and take all creator work with them.",
+          "chosen": false,
+          "rejectedBecause": "Used as supporting evidence inside the troll beat, not as the fork."
+        }
+      ]
+    },
+    {
+      "id": "promised-land",
+      "name": "The Promised Land",
+      "subtitle": "Paint the destination",
+      "prompt": "What is the desirable, worth-the-journey end state?",
+      "options": [
+        {
+          "id": "pl-steve-publishes",
+          "title": "A new identity for the buyer — Steve becomes a published comic creator",
+          "description": "Steve, 38, has had a story in his head for 20 years. Publishes his first chapter in an afternoon. His community reads it. He owns the IP. There are millions of Steves.",
+          "chosen": true,
+          "spokenLine": "Anyone with a story can produce a publishable comic chapter. Not a slideshow of AI images — a real comic. Paced, paneled, consistent, owned. Steve publishes his first chapter in an afternoon. There are millions of Steves."
+        },
+        {
+          "id": "pl-chapter-in-60-min",
+          "title": "Concrete outcome — a publishable chapter in under 60 minutes",
+          "description": "Quantified before/after the platform.",
+          "chosen": false,
+          "rejectedBecause": "Used as the supporting metric inside the chosen identity framing. Said alone, the metric sounds like a toy."
+        },
+        {
+          "id": "pl-comics-democratized",
+          "title": "Industry-wide transformation — sequential storytelling democratized",
+          "description": "The whole comic category looks different on the other side.",
+          "chosen": false,
+          "rejectedBecause": "Investors fund products, not eras. Identity beats abstraction in the room."
+        },
+        {
+          "id": "pl-creative-abundance",
+          "title": "Abundance / relief — the bottleneck disappears",
+          "description": "Scarcity (artists, time, money) replaced with creative ease.",
+          "chosen": false,
+          "rejectedBecause": "Too soft for an investor pitch."
+        }
+      ]
+    },
+    {
+      "id": "troll",
+      "name": "The Troll",
+      "subtitle": "The obstacle on the bridge",
+      "prompt": "What blocks people from reaching the Promised Land today?",
+      "options": [
+        {
+          "id": "troll-gatekeepers-and-ownership",
+          "title": "Composite troll — gatekeepers + the ownership trap",
+          "description": "Two faces. (1) Publishers and the artist-dependency tax decide which stories exist. (2) Every AI tool that promises an alternative owns your creations the moment you make them. Sora shut down and everyone's work vanished with it.",
+          "chosen": true,
+          "spokenLine": "The comic industry runs on a broken access model — gatekeepers decide which stories exist, and the AI tools that promise an alternative own your creations the moment you make them. Sora shut down and everyone's work vanished with it. On-ramps exist. They all dead-end before publishable."
+        },
+        {
+          "id": "troll-on-ramps-dead-end",
+          "title": "On-ramps that dead-end before publishable",
+          "description": "Webtoon (no art), Dashtoon/AI Comic Factory (slop), Canva (memes), Fiverr (slow/expensive) — every path stops short of a real chapter.",
+          "chosen": false,
+          "rejectedBecause": "Demoted to supporting evidence. James's note: this describes terrain, not a troll. Need a face to slay."
+        },
+        {
+          "id": "troll-artist-cost-and-cycle",
+          "title": "$500/page and six-week revision cycles",
+          "description": "Independent creators priced out and slowed down by artist dependency.",
+          "chosen": false,
+          "rejectedBecause": "James was explicit — do not make artists the enemy. Reframed as gatekeeper symptom inside the chosen troll."
+        },
+        {
+          "id": "troll-tool-complexity",
+          "title": "Pro tools assume drawing skill",
+          "description": "Clip Studio, Photoshop, Procreate — thousand-hour learning curves.",
+          "chosen": false,
+          "rejectedBecause": "An obstacle, not the troll. Folded into the access-model framing."
+        }
+      ]
+    },
+    {
+      "id": "magic-wand",
+      "name": "The Magic Wand",
+      "subtitle": "Your gift to the hero",
+      "prompt": "What do YOU bring that lets the hero slay the troll?",
+      "options": [
+        {
+          "id": "wand-ai-native-studio",
+          "title": "Unification — an AI-native comic studio, not a comic generator",
+          "description": "Four defensible walls: (1) Directed creation pipeline. (2) Proprietary 7-category layout taxonomy — Breath, Weight, Reveal, Drive, Surge, Rupture, Fracture. (3) Character lock via LoRA + World Vault. (4) Ownership — your creations stay yours.",
+          "chosen": true,
+          "spokenLine": "We are not a comic generator. We are an AI-native comic studio. AI handles the pixels. You handle the story. The result is a publishable chapter in under 60 minutes — and you own all of it."
+        },
+        {
+          "id": "wand-layout-taxonomy",
+          "title": "Proprietary layout taxonomy as standalone wand",
+          "description": "The 7-category pacing system as the headline differentiator.",
+          "chosen": false,
+          "rejectedBecause": "One wall is a feature. Four walls is a studio. Kept as wall #2 inside the chosen wand."
+        },
+        {
+          "id": "wand-speed-60-min",
+          "title": "Speed — chapter in 60 minutes",
+          "description": "Same outcome in a fraction of the time.",
+          "chosen": false,
+          "rejectedBecause": "Speed is the output, not the wand. Sounds like a toy when said alone."
+        },
+        {
+          "id": "wand-creator-insight",
+          "title": "Insight — the Creator DNA / awareness layer",
+          "description": "Mirror the patterns in the comics each creator unconsciously makes.",
+          "chosen": false,
+          "rejectedBecause": "Strong long-term direction (see Awareness Apps Manifesto findings) but not the lead today."
+        },
+        {
+          "id": "wand-prism-partnership",
+          "title": "Partnership — Prism-as-a-Service for IP holders",
+          "description": "Fight beside the brand: train their characters, host fan creation, return UGC.",
+          "chosen": false,
+          "rejectedBecause": "Surfaced as the B2B compound beat in the deck rather than as the headline wand."
+        }
+      ]
+    },
+    {
+      "id": "hoard",
+      "name": "The Hoard",
+      "subtitle": "Proof the treasure is real",
+      "prompt": "What evidence convinces the hero that this story is true?",
+      "options": [
+        {
+          "id": "hoard-demo-plus-the99",
+          "title": "Live demo + The 99 case study",
+          "description": "Demo: 60 seconds, prompt to finished page, between origin story and product pitch. Case study: The 99 — global superhero franchise with DC crossover history and 70-country distribution — evaluated other solutions and chose Panel Haus to power their revival. Adam Gilad is writing the cancer comic with Ryan, partnered with the American Cancer Society and an 80M-kid Indonesian distribution path.",
+          "chosen": true,
+          "spokenLine": "The 99 — a global superhero franchise with DC crossover history and 70-country distribution — evaluated other solutions and chose Panel Haus to power their revival. Adam Gilad is writing their next comic on the platform, partnered with the American Cancer Society. Every IP holder we add is a distribution channel and a revenue stream.",
+          "permissionBoundary": "Only use 'they evaluated other solutions and chose Panel Haus.' Do not improvise beyond this. Do not mention Netflix."
+        },
+        {
+          "id": "hoard-metrics",
+          "title": "Hard scale metrics",
+          "description": "Active creators, chapters produced, time-to-publish, paying subs.",
+          "chosen": false,
+          "rejectedBecause": "We don't have the scale numbers yet. Honest framing: 'that's what this round funds.' Do not fabricate."
+        },
+        {
+          "id": "hoard-encode-club",
+          "title": "Encode Club AI commercial category win",
+          "description": "Third-party endorsement, $1K prize.",
+          "chosen": false,
+          "rejectedBecause": "Real but small. Use as validation, not headline proof."
+        },
+        {
+          "id": "hoard-ip-pipeline",
+          "title": "IP partnership pipeline (Claynosaurz, others in discussion)",
+          "description": "Multiple IP holders evaluating Prism-as-a-Service.",
+          "chosen": false,
+          "rejectedBecause": "Frame as forward-looking pipeline in the B2B beat, not as closed-deal hoard."
+        }
+      ]
+    }
+  ],
+  "sequencingNotes": {
+    "originStoryInsertion": "Insert the Origin Story between Promised Land and Magic Wand (Beat 4.5), per James Drage's coaching. Rationale: in 2026 the audience distrusts product demos by default. Origin establishes credibility before the demo runs, converting a skeptical audience into a primed one.",
+    "demoPlacement": "60 seconds maximum, between Origin Story and Magic Wand. One magic moment — prompt to finished page. If live fails, cut to the recorded version. Never fumble live.",
+    "seededQAndA": [
+      "How character consistency actually works (triggers LoRA + World Vault moat).",
+      "How the IP holder pipeline economics work (triggers The 99 deep-dive).",
+      "How the layout taxonomy was built and why it matters (triggers craft credibility)."
+    ]
+  }
+}
+```
