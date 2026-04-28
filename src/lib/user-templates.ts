@@ -10,7 +10,12 @@ export function loadUserTemplates(): Template[] {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    // Clean up legacy "— New" suffix from older templates
+    return parsed.map((t: Template) => ({
+      ...t,
+      name: t.name.replace(/ — New$/, ""),
+    }));
   } catch {
     return [];
   }

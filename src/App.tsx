@@ -580,7 +580,7 @@ export default function App() {
 
       const newTemplate: Template = {
         id: `blank-${frameworkId}-${Date.now()}`,
-        name: `${framework.name} — New`,
+        name: framework.name,
         description: framework.description,
         beats: framework.beats.map((b) => ({
           ...b,
@@ -609,16 +609,6 @@ export default function App() {
       }
     },
     [templateId, setUserTemplates],
-  );
-
-  const handleRenameTemplate = useCallback(
-    (id: string, newName: string) => {
-      if (!isUserTemplate(id)) return;
-      setUserTemplates((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, name: newName } : t)),
-      );
-    },
-    [setUserTemplates],
   );
 
   const handleAddOption = useCallback(
