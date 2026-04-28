@@ -23,6 +23,7 @@ import { ThroughlineOverview } from "./components/ThroughlineOverview";
 import { TopBar } from "./components/TopBar";
 import { ApiKeySettings } from "./components/ApiKeySettings";
 import { IngestPanel } from "./components/IngestPanel";
+import { FrameworkPicker } from "./components/FrameworkPicker";
 import {
   type LLMSettings,
   type LLMClient,
@@ -42,6 +43,11 @@ import {
   getFrameworkDefinition,
 } from "./lib/template-selector";
 import { type GenerationProgress, generateThroughline } from "./lib/generator";
+import {
+  loadUserTemplates,
+  saveUserTemplates,
+  isUserTemplate,
+} from "./lib/user-templates";
 
 const CLUSTER_W = 300;
 const CLUSTER_GAP = 90;
@@ -154,10 +160,13 @@ function buildNodes(
     value: string,
   ) => void,
   isGenerated: boolean,
+  isUserTpl: boolean,
   regeneratingBeats: Set<string>,
   regeneratingOptions: Set<string>,
   onRegenerateBeat?: (beatId: string) => void,
   onRegenerateOption?: (beatId: string, optionId: string) => void,
+  onAddOption?: (beatId: string) => void,
+  onDeleteOption?: (beatId: string, optionId: string) => void,
 ): Node[] {
   const nodes: Node[] = [];
   template.beats.forEach((beat, beatIndex) => {
@@ -176,7 +185,9 @@ function buildNodes(
       (sum, o) => sum + o.height + OPTION_GAP,
       0,
     );
-    const clusterHeight = HEADER_H + optionsBlockHeight + OPTION_GAP;
+    const addBtnSpace = isUserTpl ? 44 : 0;
+    const clusterHeight =
+      HEADER_H + optionsBlockHeight + OPTION_GAP + addBtnSpace;
 
     nodes.push({
       id: clusterId,
@@ -190,10 +201,13 @@ function buildNodes(
         committed,
         hasSelection: !!selections[beat.id],
         beatId: beat.id,
+        optionCount: beat.options.length,
+        isUserTemplate: isUserTpl,
         isGenerated,
         regenerating: regeneratingBeats.has(beat.id),
         onEdit: onEditCluster,
         onRegenerateBeat,
+        onAddOption,
       },
       style: {
         width: CLUSTER_W,
@@ -229,6 +243,8 @@ function buildNodes(
           regenerating: regeneratingOptions.has(`${beat.id}:${option.id}`),
           onEdit: onEditOption,
           onRegenerateOption,
+          isUserTemplate: isUserTpl,
+          onDeleteOption,
         },
         parentId: clusterId,
         extent: "parent",
@@ -441,7 +457,19 @@ export default function App() {
   const [pendingFrameworkId, setPendingFrameworkId] = useState<string | null>(
     null,
   );
-  const [generatedTemplates, setGeneratedTemplates] = useState<Template[]>([]);
+  const [userTemplates, setUserTemplatesRaw] = useState<Template[]>(() =>
+    loadUserTemplates(),
+  );
+  const setUserTemplates = useCallback(
+    (updater: Template[] | ((prev: Template[]) => Template[])) => {
+      setUserTemplatesRaw((prev) => {
+        const next = typeof updater === "function" ? updater(prev) : updater;
+        saveUserTemplates(next);
+        return next;
+      });
+    },
+    [],
+  );
   const [regeneratingBeats, setRegeneratingBeats] = useState<Set<string>>(
     new Set(),
   );
@@ -456,8 +484,8 @@ export default function App() {
 
   // All templates = static + generated
   const allTemplates = useMemo(
-    () => [...templates, ...generatedTemplates],
-    [generatedTemplates],
+    () => [...templates, ...userTemplates],
+    [userTemplates],
   );
 
   const template =
@@ -502,27 +530,153 @@ export default function App() {
     [llmClient, generating, corpus, llmSettings],
   );
 
-  const handleConfirmFramework = useCallback(async () => {
-    const fwId = pendingFrameworkId;
-    if (!fwId) return;
-    setAwaitingConfirmation(false);
-    setGenerating(true);
-    setGenProgress({ stage: "generating", completedBeats: 0 });
-    try {
-      await runGeneration(fwId);
-    } catch (err) {
-      setGenProgress({
-        stage: "error",
-        completedBeats: 0,
-        error: err instanceof Error ? err.message : "Generation failed",
-      });
-      setGenerating(false);
-    }
-  }, [pendingFrameworkId]);
+  const handleConfirmFramework = useCallback(
+    async (overrideId?: string) => {
+      const fwId = overrideId ?? pendingFrameworkId;
+      if (!fwId) return;
+      setAwaitingConfirmation(false);
+      setPendingFrameworkId(fwId);
+      setGenerating(true);
+      setGenProgress({ stage: "generating", completedBeats: 0 });
+      try {
+        await runGeneration(fwId);
+      } catch (err) {
+        setGenProgress({
+          stage: "error",
+          completedBeats: 0,
+          error: err instanceof Error ? err.message : "Generation failed",
+        });
+        setGenerating(false);
+      }
+    },
+    [pendingFrameworkId],
+  );
 
   const handleSwitchFramework = useCallback((id: string) => {
     setPendingFrameworkId(id);
   }, []);
+
+  // --- Blank template + management ---
+
+  const handleNewBlankTemplate = useCallback(
+    (frameworkId: string) => {
+      const framework = getFrameworkDefinition(frameworkId);
+      if (!framework) return;
+
+      const newTemplate: Template = {
+        id: `blank-${frameworkId}-${Date.now()}`,
+        name: `${framework.name} — New`,
+        description: framework.description,
+        beats: framework.beats.map((b) => ({
+          ...b,
+          options: [], // empty — user fills in manually
+        })),
+      };
+
+      setUserTemplates((prev) => [...prev, newTemplate]);
+      setTemplateId(newTemplate.id);
+      setSelections({});
+      setCommitted(false);
+      setOverrides({});
+      setView("canvas");
+      setShowFrameworkPicker(false);
+    },
+    [setUserTemplates],
+  );
+
+  const handleDeleteTemplate = useCallback(
+    (id: string) => {
+      if (!isUserTemplate(id)) return;
+      setUserTemplates((prev) => prev.filter((t) => t.id !== id));
+      // If we just deleted the active template, switch to first static template
+      if (templateId === id) {
+        setTemplateId(templates[0].id);
+      }
+    },
+    [templateId, setUserTemplates],
+  );
+
+  const handleRenameTemplate = useCallback(
+    (id: string, newName: string) => {
+      if (!isUserTemplate(id)) return;
+      setUserTemplates((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, name: newName } : t)),
+      );
+    },
+    [setUserTemplates],
+  );
+
+  const handleAddOption = useCallback(
+    (beatId: string) => {
+      if (!isUserTemplate(templateId)) return;
+      const newOptionId = `opt-${beatId}-${Date.now()}`;
+      const newOption = {
+        id: newOptionId,
+        title: "New option",
+        description: "",
+      };
+      setUserTemplates((prev) =>
+        prev.map((t) =>
+          t.id === templateId
+            ? {
+                ...t,
+                beats: t.beats.map((b) =>
+                  b.id === beatId
+                    ? { ...b, options: [...b.options, newOption] }
+                    : b,
+                ),
+              }
+            : t,
+        ),
+      );
+    },
+    [templateId, setUserTemplates],
+  );
+
+  const handleDeleteOption = useCallback(
+    (beatId: string, optionId: string) => {
+      if (!isUserTemplate(templateId)) return;
+      setUserTemplates((prev) =>
+        prev.map((t) =>
+          t.id === templateId
+            ? {
+                ...t,
+                beats: t.beats.map((b) =>
+                  b.id === beatId
+                    ? {
+                        ...b,
+                        options: b.options.filter((o) => o.id !== optionId),
+                      }
+                    : b,
+                ),
+              }
+            : t,
+        ),
+      );
+      // Clear selection if this option was selected
+      setSelections((prev) => {
+        if (prev[beatId] === optionId) {
+          const next = { ...prev };
+          delete next[beatId];
+          return next;
+        }
+        return prev;
+      });
+    },
+    [templateId, setUserTemplates],
+  );
+
+  const handleUpdateMeta = useCallback(
+    (fields: { title?: string; audience?: string }) => {
+      if (!isUserTemplate(templateId)) return;
+      setUserTemplates((prev) =>
+        prev.map((t) => (t.id === templateId ? { ...t, ...fields } : t)),
+      );
+    },
+    [templateId, setUserTemplates],
+  );
+
+  const [showFrameworkPicker, setShowFrameworkPicker] = useState(false);
 
   async function runGeneration(frameworkId: string) {
     if (!llmClient) return;
@@ -548,7 +702,7 @@ export default function App() {
     );
 
     // Add the generated template and switch to it
-    setGeneratedTemplates((prev) => [...prev, generated]);
+    setUserTemplates((prev) => [...prev, generated]);
     setTemplateId(generated.id);
     setSelections({});
     setCommitted(false);
@@ -582,8 +736,8 @@ export default function App() {
         );
 
         if (newOptions.length > 0) {
-          // Update the template in generatedTemplates
-          setGeneratedTemplates((prev) =>
+          // Update the template in userTemplates
+          setUserTemplates((prev) =>
             prev.map((t) =>
               t.id === templateId
                 ? {
@@ -634,7 +788,7 @@ export default function App() {
         );
 
         if (newOption) {
-          setGeneratedTemplates((prev) =>
+          setUserTemplates((prev) =>
             prev.map((t) =>
               t.id === templateId
                 ? {
@@ -747,10 +901,13 @@ export default function App() {
       handleEditOption,
       handleEditCluster,
       isGeneratedTemplate,
+      isUserTemplate(templateId),
       regeneratingBeats,
       regeneratingOptions,
       handleRegenerateBeat,
       handleRegenerateOption,
+      handleAddOption,
+      handleDeleteOption,
     );
     setNodes((curr) => {
       const posMap = new Map(curr.map((n) => [n.id, n.position]));
@@ -772,6 +929,8 @@ export default function App() {
     regeneratingOptions,
     handleRegenerateBeat,
     handleRegenerateOption,
+    handleAddOption,
+    handleDeleteOption,
     setNodes,
     setEdges,
   ]);
@@ -939,6 +1098,9 @@ export default function App() {
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenIngest={() => setIngestOpen((v) => !v)}
         ingestOpen={ingestOpen}
+        onNewTemplate={() => setShowFrameworkPicker(true)}
+        onDeleteTemplate={handleDeleteTemplate}
+        canDeleteTemplate={isUserTemplate(templateId)}
       />
       <div className="main">
         {view === "overview" ? (
@@ -964,9 +1126,11 @@ export default function App() {
                 maxZoom={1.8}
                 proOptions={{ hideAttribution: true }}
                 zoomOnScroll
+                noWheelClassName="nopan"
                 selectionOnDrag
                 deleteKeyCode={null}
                 multiSelectionKeyCode={null}
+                panActivationKeyCode={null}
               >
                 <Background color="#ddd3c0" gap={28} size={1.4} />
                 <Controls showInteractive={false} position="bottom-left" />
@@ -1005,10 +1169,12 @@ export default function App() {
                 selections={selections}
                 committed={committed}
                 overrides={overrides}
+                canEditMeta={isUserTemplate(templateId)}
                 onReset={handleReset}
                 onExport={handleExport}
                 onCopyMarkdown={handleCopyMarkdown}
                 onCopyAll={handleCopyAll}
+                onUpdateMeta={handleUpdateMeta}
               />
             )}
           </>
@@ -1020,6 +1186,26 @@ export default function App() {
         onClose={() => setSettingsOpen(false)}
         onSettingsChange={setLlmSettings}
       />
+
+      {showFrameworkPicker && (
+        <div
+          className="settings-overlay"
+          onClick={() => setShowFrameworkPicker(false)}
+        >
+          <div className="fw-picker-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="fw-picker-modal-header">
+              <h2>New throughline</h2>
+              <button
+                className="settings-close"
+                onClick={() => setShowFrameworkPicker(false)}
+              >
+                &times;
+              </button>
+            </div>
+            <FrameworkPicker onSelect={handleNewBlankTemplate} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

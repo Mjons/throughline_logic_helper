@@ -11,10 +11,18 @@ export type FrameworkSelection = {
   alternativeReason: string;
 };
 
+export type FrameworkCategory =
+  | "pitch"
+  | "storytelling"
+  | "strategy"
+  | "domain";
+
 export type FrameworkDefinition = {
   id: string;
   name: string;
   description: string;
+  category: FrameworkCategory;
+  bestFor: string;
   beats: Beat[];
 };
 
@@ -24,6 +32,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     id: "raskin-8",
     name: "Andy Raskin 8-Beat",
     description: "Full narrative arc for investor pitches and keynotes",
+    category: "pitch",
+    bestFor: "Investor pitches, keynotes, full decks",
     beats: [
       {
         id: "river",
@@ -88,6 +98,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     id: "raskin-5",
     name: "Andy Raskin 5-Beat",
     description: "Compressed narrative for cold outreach and short pitches",
+    category: "pitch",
+    bestFor: "Cold emails, 5-min pitches, elevator conversations",
     beats: [
       {
         id: "river",
@@ -130,6 +142,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     id: "sequoia",
     name: "Sequoia Pitch Deck",
     description: "Industry-standard VC pitch structure",
+    category: "pitch",
+    bestFor: "Seed through Series B fundraising",
     beats: [
       {
         id: "problem",
@@ -200,6 +214,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     id: "storybrand",
     name: "StoryBrand",
     description: "Customer-hero marketing framework for copy and campaigns",
+    category: "storytelling",
+    bestFor: "Website copy, landing pages, email sequences",
     beats: [
       {
         id: "character",
@@ -256,6 +272,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     id: "challenger",
     name: "Challenger Sale",
     description: "Teaching-based persuasion for complex sales",
+    category: "pitch",
+    bestFor: "Consultative enterprise sales, category creation",
     beats: [
       {
         id: "warmer",
@@ -305,6 +323,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     id: "amazon-6",
     name: "Amazon 6-Pager",
     description: "Internal decision document for proposals and strategy",
+    category: "strategy",
+    bestFor: "Internal proposals, strategic memos, product briefs",
     beats: [
       {
         id: "context",
@@ -354,6 +374,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     id: "pixar",
     name: "Pixar Story Spine",
     description: "Six-beat rapid story prototyping framework",
+    category: "storytelling",
+    bestFor: "Brand narratives, video scripts, case studies",
     beats: [
       {
         id: "once",
@@ -403,6 +425,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     id: "saas-investor",
     name: "SaaS Investor Narrative",
     description: "B2B SaaS fundraising with metrics emphasis",
+    category: "domain",
+    bestFor: "SaaS Series A-C fundraising, board decks",
     beats: [
       {
         id: "category",
@@ -459,6 +483,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     id: "spin",
     name: "SPIN Selling",
     description: "Question-driven discovery framework",
+    category: "pitch",
+    bestFor: "Discovery calls, first meetings, consultative selling",
     beats: [
       {
         id: "situation",
@@ -494,6 +520,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     id: "freytag",
     name: "Freytag's Pyramid",
     description: "Classical 5-act dramatic structure",
+    category: "storytelling",
+    bestFor: "Case studies, retrospectives, conference talks",
     beats: [
       {
         id: "exposition",
@@ -536,6 +564,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     id: "jtbd",
     name: "Jobs-to-be-Done",
     description: "Product positioning through customer motivation",
+    category: "strategy",
+    bestFor: "Product positioning, competitive analysis, pricing",
     beats: [
       {
         id: "situation",
@@ -578,6 +608,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     id: "kishotenketsu",
     name: "Kishōtenketsu",
     description: "Four-beat East Asian narrative — no conflict required",
+    category: "storytelling",
+    bestFor: "Product announcements, blog posts, no-conflict narratives",
     beats: [
       {
         id: "ki",
@@ -681,6 +713,10 @@ export function getAllFrameworkIds(): string[] {
   return Object.keys(FRAMEWORK_BEATS);
 }
 
+export function getAllFrameworks(): FrameworkDefinition[] {
+  return Object.values(FRAMEWORK_BEATS);
+}
+
 export async function generateCustomFramework(
   client: LLMClient,
   corpus: UserCorpus,
@@ -707,6 +743,8 @@ export async function generateCustomFramework(
     id: parsed.frameworkId ?? "custom-generated",
     name: parsed.frameworkName ?? "Custom Framework",
     description: parsed.description ?? "AI-generated framework",
+    category: "strategy" as FrameworkCategory,
+    bestFor: "Custom — AI-generated for your specific situation",
     beats: (parsed.beats ?? []).map(
       (b: {
         id: string;

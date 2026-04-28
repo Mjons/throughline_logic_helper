@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Template, OptionSourceType } from "../types";
 
 type OptionOverride = { title?: string; description?: string };
@@ -13,10 +14,12 @@ type Props = {
   selections: Record<string, string>;
   committed: boolean;
   overrides: TemplateOverrides;
+  canEditMeta?: boolean;
   onReset: () => void;
   onExport: () => void;
   onCopyMarkdown: () => void;
   onCopyAll: () => void;
+  onUpdateMeta?: (fields: { name?: string; audience?: string }) => void;
 };
 
 export function SidePanel({
@@ -24,10 +27,12 @@ export function SidePanel({
   selections,
   committed,
   overrides,
+  canEditMeta,
   onReset,
   onExport,
   onCopyMarkdown,
   onCopyAll,
+  onUpdateMeta,
 }: Props) {
   const chosenCount = Object.keys(selections).length;
   const total = template.beats.length;
@@ -49,10 +54,102 @@ export function SidePanel({
   const hasSourceData =
     sourceCounts.user + sourceCounts.research + sourceCounts.hybrid > 0;
 
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [draftTitle, setDraftTitle] = useState(template.title ?? "");
+  const [editingAudience, setEditingAudience] = useState(false);
+  const [draftAudience, setDraftAudience] = useState(template.audience ?? "");
+
+  const commitTitle = () => {
+    const trimmed = draftTitle.trim();
+    if (trimmed !== (template.title ?? "")) {
+      onUpdateMeta?.({ title: trimmed || undefined });
+    }
+    setEditingTitle(false);
+  };
+
+  const commitAudience = () => {
+    const trimmed = draftAudience.trim();
+    if (trimmed !== (template.audience ?? "")) {
+      onUpdateMeta?.({ audience: trimmed });
+    }
+    setEditingAudience(false);
+  };
+
   return (
     <aside className="side-panel">
       <div className="sp-header">
-        <h2>Throughline</h2>
+        {canEditMeta ? (
+          <>
+            {editingTitle ? (
+              <input
+                className="sp-title-input"
+                value={draftTitle}
+                onChange={(e) => setDraftTitle(e.target.value)}
+                onBlur={commitTitle}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") commitTitle();
+                  if (e.key === "Escape") {
+                    setDraftTitle(template.title ?? "");
+                    setEditingTitle(false);
+                  }
+                }}
+                autoFocus
+                placeholder="Name your throughline..."
+                spellCheck
+              />
+            ) : (
+              <h2
+                className="sp-title-editable"
+                onClick={() => {
+                  setDraftTitle(template.title ?? "");
+                  setEditingTitle(true);
+                }}
+                title="Click to name this throughline"
+              >
+                {template.title || "Untitled"}
+              </h2>
+            )}
+            <div className="sp-framework-label">{template.name}</div>
+          </>
+        ) : (
+          <h2>{template.name}</h2>
+        )}
+
+        {canEditMeta && (
+          <div className="sp-audience-row">
+            <span className="sp-audience-label">Audience</span>
+            {editingAudience ? (
+              <input
+                className="sp-audience-input"
+                value={draftAudience}
+                onChange={(e) => setDraftAudience(e.target.value)}
+                onBlur={commitAudience}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") commitAudience();
+                  if (e.key === "Escape") {
+                    setDraftAudience(template.audience ?? "");
+                    setEditingAudience(false);
+                  }
+                }}
+                autoFocus
+                placeholder="e.g. Investor, Customer, Partner..."
+                spellCheck
+              />
+            ) : (
+              <span
+                className="sp-audience-value"
+                onClick={() => {
+                  setDraftAudience(template.audience ?? "");
+                  setEditingAudience(true);
+                }}
+                title="Click to set audience"
+              >
+                {template.audience || "Set audience..."}
+              </span>
+            )}
+          </div>
+        )}
+
         <div className="sp-hint">
           {committed
             ? "Locked. Your narrative is committed."

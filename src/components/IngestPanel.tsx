@@ -11,6 +11,7 @@ import type { GenerationProgress } from "../lib/generator";
 import type { FrameworkSelection } from "../lib/template-selector";
 import { ChatInterface } from "./ChatInterface";
 import { AgentProgress } from "./AgentProgress";
+import { FrameworkPicker } from "./FrameworkPicker";
 
 type Props = {
   client: LLMClient;
@@ -21,7 +22,7 @@ type Props = {
   generating: boolean;
   progress: GenerationProgress | null;
   frameworkSelection: FrameworkSelection | null;
-  onConfirmFramework: () => void;
+  onConfirmFramework: (overrideId?: string) => void;
   onSwitchFramework: (id: string) => void;
   awaitingConfirmation: boolean;
   model?: string;
@@ -122,38 +123,12 @@ export function IngestPanel({
       </div>
 
       <div className="ingest-body">
-        {/* Framework confirmation card */}
-        {awaitingConfirmation && frameworkSelection && (
-          <div className="framework-confirm">
-            <div className="framework-confirm-header">
-              Recommended framework
-            </div>
-            <div className="framework-confirm-name">
-              {frameworkSelection.frameworkName}
-            </div>
-            <div className="framework-confirm-reason">
-              {frameworkSelection.reasoning}
-            </div>
-            {frameworkSelection.alternativeId && (
-              <div className="framework-confirm-alt">
-                Alternative: <strong>{frameworkSelection.alternativeId}</strong>{" "}
-                — {frameworkSelection.alternativeReason}
-                <button
-                  className="framework-alt-btn"
-                  onClick={() =>
-                    onSwitchFramework(frameworkSelection.alternativeId)
-                  }
-                >
-                  Use this instead
-                </button>
-              </div>
-            )}
-            <div className="framework-confirm-actions">
-              <button className="tb-btn primary" onClick={onConfirmFramework}>
-                Generate with this framework
-              </button>
-            </div>
-          </div>
+        {/* Framework picker (guided mode) */}
+        {awaitingConfirmation && (
+          <FrameworkPicker
+            recommendedId={frameworkSelection?.frameworkId}
+            onSelect={(id) => onConfirmFramework(id)}
+          />
         )}
 
         {/* Progress bar during generation */}

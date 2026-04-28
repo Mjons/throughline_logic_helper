@@ -9,6 +9,8 @@ export type BeatClusterData = {
   committed: boolean;
   hasSelection: boolean;
   beatId: string;
+  optionCount: number;
+  isUserTemplate?: boolean;
   isGenerated?: boolean;
   regenerating?: boolean;
   onEdit?: (
@@ -17,6 +19,7 @@ export type BeatClusterData = {
     value: string,
   ) => void;
   onRegenerateBeat?: (beatId: string) => void;
+  onAddOption?: (beatId: string) => void;
 };
 
 export type BeatClusterNodeType = Node<BeatClusterData, "beatCluster">;
@@ -87,11 +90,16 @@ function Impl({ data }: NodeProps<BeatClusterNodeType>) {
   };
 
   const onFieldKey = (e: React.KeyboardEvent) => {
+    e.stopPropagation();
     if (e.key === "Escape") {
       e.preventDefault();
       cancelAll();
     }
   };
+
+  const stopWheel = (e: React.WheelEvent) => e.stopPropagation();
+  const stopClipboard = (e: React.ClipboardEvent) => e.stopPropagation();
+  const stopKey = (e: React.KeyboardEvent) => e.stopPropagation();
 
   return (
     <div className={classes}>
@@ -113,40 +121,55 @@ function Impl({ data }: NodeProps<BeatClusterNodeType>) {
         {editing ? (
           <>
             <textarea
-              className="beat-cluster-name editing"
+              className="beat-cluster-name editing nopan"
               value={draftName}
               onChange={(e) => setDraftName(e.target.value)}
               onBlur={commitName}
               onKeyDown={onFieldKey}
+              onKeyUp={stopKey}
               onClick={stop}
               onMouseDown={stop}
               onDoubleClick={stop}
+              onWheel={stopWheel}
+              onCopy={stopClipboard}
+              onCut={stopClipboard}
+              onPaste={stopClipboard}
               autoFocus
               rows={1}
               spellCheck
             />
             <textarea
-              className="beat-cluster-subtitle editing"
+              className="beat-cluster-subtitle editing nopan"
               value={draftSubtitle}
               onChange={(e) => setDraftSubtitle(e.target.value)}
               onBlur={commitSubtitle}
               onKeyDown={onFieldKey}
+              onKeyUp={stopKey}
               onClick={stop}
               onMouseDown={stop}
               onDoubleClick={stop}
+              onWheel={stopWheel}
+              onCopy={stopClipboard}
+              onCut={stopClipboard}
+              onPaste={stopClipboard}
               rows={1}
               spellCheck
               placeholder="Subtitle…"
             />
             <textarea
-              className="beat-cluster-prompt editing"
+              className="beat-cluster-prompt editing nopan"
               value={draftPrompt}
               onChange={(e) => setDraftPrompt(e.target.value)}
               onBlur={commitPrompt}
               onKeyDown={onFieldKey}
+              onKeyUp={stopKey}
               onClick={stop}
               onMouseDown={stop}
               onDoubleClick={stop}
+              onWheel={stopWheel}
+              onCopy={stopClipboard}
+              onCut={stopClipboard}
+              onPaste={stopClipboard}
               rows={3}
               spellCheck
               placeholder="Prompt…"
@@ -180,6 +203,26 @@ function Impl({ data }: NodeProps<BeatClusterNodeType>) {
           </button>
         )}
       </div>
+      {data.optionCount === 0 && !data.committed && (
+        <div className="beat-cluster-empty">
+          <div className="beat-cluster-empty-text">No options yet</div>
+        </div>
+      )}
+      {data.isUserTemplate && !data.committed && !editing && (
+        <button
+          type="button"
+          className="add-option-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            data.onAddOption?.(data.beatId);
+          }}
+          onMouseDown={stop}
+          title="Add a new option card"
+          aria-label="Add option"
+        >
+          +
+        </button>
+      )}
     </div>
   );
 }

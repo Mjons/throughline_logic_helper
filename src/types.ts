@@ -37,7 +37,9 @@ export type SequencingNotes = {
 export type Template = {
   id: string;
   name: string;
+  title?: string;
   description: string;
+  audience?: string;
   beats: Beat[];
   sequencingNotes?: SequencingNotes;
 };

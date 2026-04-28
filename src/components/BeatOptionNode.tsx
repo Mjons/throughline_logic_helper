@@ -20,6 +20,8 @@ export type BeatOptionData = {
     value: string,
   ) => void;
   onRegenerateOption?: (beatId: string, optionId: string) => void;
+  isUserTemplate?: boolean;
+  onDeleteOption?: (beatId: string, optionId: string) => void;
 };
 
 export type BeatOptionNodeType = Node<BeatOptionData, "beatOption">;
@@ -88,11 +90,16 @@ function Impl({ data }: NodeProps<BeatOptionNodeType>) {
   };
 
   const onFieldKey = (e: React.KeyboardEvent) => {
+    e.stopPropagation();
     if (e.key === "Escape") {
       e.preventDefault();
       cancelAll();
     }
   };
+
+  const stopWheel = (e: React.WheelEvent) => e.stopPropagation();
+  const stopClipboard = (e: React.ClipboardEvent) => e.stopPropagation();
+  const stopKey = (e: React.KeyboardEvent) => e.stopPropagation();
 
   return (
     <div className={classes}>
@@ -110,6 +117,22 @@ function Impl({ data }: NodeProps<BeatOptionNodeType>) {
           {editing ? "✓" : "✎"}
         </button>
       ) : null}
+      {data.isUserTemplate && !data.committed && !editing && (
+        <button
+          type="button"
+          className="card-delete-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            data.onDeleteOption?.(data.beatId, data.optionId);
+          }}
+          onMouseDown={stop}
+          onDoubleClick={stop}
+          title="Delete this option"
+          aria-label="Delete option"
+        >
+          &times;
+        </button>
+      )}
       {data.isGenerated && !data.committed && !editing && (
         <button
           type="button"
@@ -130,27 +153,37 @@ function Impl({ data }: NodeProps<BeatOptionNodeType>) {
       {editing ? (
         <>
           <textarea
-            className="beat-option-title editing"
+            className="beat-option-title editing nopan"
             value={draftTitle}
             onChange={(e) => setDraftTitle(e.target.value)}
             onBlur={commitTitle}
             onKeyDown={onFieldKey}
+            onKeyUp={stopKey}
             onClick={stop}
             onMouseDown={stop}
             onDoubleClick={stop}
+            onWheel={stopWheel}
+            onCopy={stopClipboard}
+            onCut={stopClipboard}
+            onPaste={stopClipboard}
             autoFocus
             rows={2}
             spellCheck
           />
           <textarea
-            className="beat-option-desc editing"
+            className="beat-option-desc editing nopan"
             value={draftDesc}
             onChange={(e) => setDraftDesc(e.target.value)}
             onBlur={commitDesc}
             onKeyDown={onFieldKey}
+            onKeyUp={stopKey}
             onClick={stop}
             onMouseDown={stop}
             onDoubleClick={stop}
+            onWheel={stopWheel}
+            onCopy={stopClipboard}
+            onCut={stopClipboard}
+            onPaste={stopClipboard}
             rows={3}
             spellCheck
             placeholder="Description…"

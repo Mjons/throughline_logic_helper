@@ -1,4 +1,5 @@
 import type { Template } from "../types";
+import { displayName } from "../lib/template-display";
 
 type Props = {
   templates: Template[];
@@ -16,6 +17,9 @@ type Props = {
   onOpenSettings: () => void;
   onOpenIngest: () => void;
   ingestOpen: boolean;
+  onNewTemplate: () => void;
+  onDeleteTemplate?: (id: string) => void;
+  canDeleteTemplate?: boolean;
 };
 
 export function TopBar({
@@ -34,6 +38,9 @@ export function TopBar({
   onOpenSettings,
   onOpenIngest,
   ingestOpen,
+  onNewTemplate,
+  onDeleteTemplate,
+  canDeleteTemplate,
 }: Props) {
   const active = templates.find((t) => t.id === templateId);
 
@@ -53,10 +60,32 @@ export function TopBar({
           >
             {templates.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.name}
+                {displayName(t)}
               </option>
             ))}
           </select>
+          <button
+            className="tb-btn tb-btn-sm"
+            onClick={onNewTemplate}
+            title="Create a new blank throughline from a framework"
+          >
+            +
+          </button>
+          {canDeleteTemplate && onDeleteTemplate && (
+            <button
+              className="tb-btn tb-btn-sm danger"
+              onClick={() => {
+                if (
+                  confirm("Delete this throughline? This cannot be undone.")
+                ) {
+                  onDeleteTemplate(templateId);
+                }
+              }}
+              title="Delete this throughline"
+            >
+              &times;
+            </button>
+          )}
         </div>
 
         {view === "canvas" && hasApiKey && (
