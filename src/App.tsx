@@ -24,6 +24,7 @@ import { TopBar } from "./components/TopBar";
 import { ApiKeySettings } from "./components/ApiKeySettings";
 import { IngestPanel } from "./components/IngestPanel";
 import { FrameworkPicker } from "./components/FrameworkPicker";
+import { TeleprompterMode } from "./components/TeleprompterMode";
 import {
   type LLMSettings,
   type LLMClient,
@@ -36,7 +37,11 @@ import {
   loadCorpus,
   saveCorpus,
 } from "./lib/corpus";
-import { regenerateBeat, regenerateOption } from "./lib/regenerator";
+import {
+  regenerateBeat,
+  regenerateOption,
+  sharpenOption,
+} from "./lib/regenerator";
 import {
   type FrameworkSelection,
   selectFramework,
@@ -167,6 +172,9 @@ function buildNodes(
   onRegenerateOption?: (beatId: string, optionId: string) => void,
   onAddOption?: (beatId: string) => void,
   onDeleteOption?: (beatId: string, optionId: string) => void,
+  sharpeningOptions?: Set<string>,
+  onSharpen?: (beatId: string, optionId: string) => void,
+  onUpdateContextHint?: (beatId: string, hint: string) => void,
 ): Node[] {
   const nodes: Node[] = [];
   template.beats.forEach((beat, beatIndex) => {
@@ -201,6 +209,7 @@ function buildNodes(
         committed,
         hasSelection: !!selections[beat.id],
         beatId: beat.id,
+        contextHint: beat.contextHint,
         optionCount: beat.options.length,
         isUserTemplate: isUserTpl,
         isGenerated,
@@ -208,6 +217,7 @@ function buildNodes(
         onEdit: onEditCluster,
         onRegenerateBeat,
         onAddOption,
+        onUpdateContextHint,
       },
       style: {
         width: CLUSTER_W,
@@ -244,7 +254,9 @@ function buildNodes(
           onEdit: onEditOption,
           onRegenerateOption,
           isUserTemplate: isUserTpl,
+          sharpening: sharpeningOptions?.has(`${beat.id}:${option.id}`),
           onDeleteOption,
+          onSharpen: isUserTpl ? onSharpen : undefined,
         },
         parentId: clusterId,
         extent: "parent",
@@ -476,6 +488,9 @@ export default function App() {
   const [regeneratingOptions, setRegeneratingOptions] = useState<Set<string>>(
     new Set(),
   );
+  const [sharpeningOptions, setSharpeningOptions] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Load corpus when template changes
   useEffect(() => {
@@ -666,8 +681,106 @@ export default function App() {
     [templateId, setUserTemplates],
   );
 
+  const handleSharpenOption = useCallback(
+    async (beatId: string, optionId: string) => {
+      const key = `${beatId}:${optionId}`;
+      if (!llmClient || sharpeningOptions.has(key)) return;
+      setSharpeningOptions((prev) => new Set(prev).add(key));
+
+      try {
+        const beat = template.beats.find((b) => b.id === beatId);
+        const option = beat?.options.find((o) => o.id === optionId);
+        if (!beat || !option) return;
+
+        const sharpened = await sharpenOption(
+          llmClient,
+          beat,
+          option,
+          corpus,
+          llmSettings?.model,
+          template.tone,
+        );
+
+        if (sharpened) {
+          setUserTemplates((prev) =>
+            prev.map((t) =>
+              t.id === templateId
+                ? {
+                    ...t,
+                    beats: t.beats.map((b) =>
+                      b.id === beatId
+                        ? {
+                            ...b,
+                            options: b.options.map((o) =>
+                              o.id === optionId
+                                ? {
+                                    ...o,
+                                    title: sharpened.title,
+                                    description: sharpened.description,
+                                    spokenLine:
+                                      sharpened.spokenLine ?? o.spokenLine,
+                                    source: o.source
+                                      ? { ...o.source, edited: true }
+                                      : undefined,
+                                  }
+                                : o,
+                            ),
+                          }
+                        : b,
+                    ),
+                  }
+                : t,
+            ),
+          );
+        }
+      } catch (err) {
+        console.error("Sharpen failed:", err);
+      }
+
+      setSharpeningOptions((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    },
+    [
+      llmClient,
+      corpus,
+      template,
+      templateId,
+      llmSettings,
+      sharpeningOptions,
+      setUserTemplates,
+    ],
+  );
+
+  const handleUpdateContextHint = useCallback(
+    (beatId: string, hint: string) => {
+      if (!isUserTemplate(templateId)) return;
+      setUserTemplates((prev) =>
+        prev.map((t) =>
+          t.id === templateId
+            ? {
+                ...t,
+                beats: t.beats.map((b) =>
+                  b.id === beatId
+                    ? { ...b, contextHint: hint || undefined }
+                    : b,
+                ),
+              }
+            : t,
+        ),
+      );
+    },
+    [templateId, setUserTemplates],
+  );
+
   const handleUpdateMeta = useCallback(
-    (fields: { title?: string; audience?: string }) => {
+    (fields: {
+      title?: string;
+      audience?: string;
+      tone?: 1 | 2 | 3 | 4 | 5;
+    }) => {
       if (!isUserTemplate(templateId)) return;
       setUserTemplates((prev) =>
         prev.map((t) => (t.id === templateId ? { ...t, ...fields } : t)),
@@ -677,6 +790,7 @@ export default function App() {
   );
 
   const [showFrameworkPicker, setShowFrameworkPicker] = useState(false);
+  const [showTeleprompter, setShowTeleprompter] = useState(false);
 
   async function runGeneration(frameworkId: string) {
     if (!llmClient) return;
@@ -908,6 +1022,9 @@ export default function App() {
       handleRegenerateOption,
       handleAddOption,
       handleDeleteOption,
+      sharpeningOptions,
+      handleSharpenOption,
+      handleUpdateContextHint,
     );
     setNodes((curr) => {
       const posMap = new Map(curr.map((n) => [n.id, n.position]));
@@ -931,6 +1048,9 @@ export default function App() {
     handleRegenerateOption,
     handleAddOption,
     handleDeleteOption,
+    sharpeningOptions,
+    handleSharpenOption,
+    handleUpdateContextHint,
     setNodes,
     setEdges,
   ]);
@@ -1175,6 +1295,7 @@ export default function App() {
                 onCopyMarkdown={handleCopyMarkdown}
                 onCopyAll={handleCopyAll}
                 onUpdateMeta={handleUpdateMeta}
+                onPractice={() => setShowTeleprompter(true)}
               />
             )}
           </>
@@ -1205,6 +1326,15 @@ export default function App() {
             <FrameworkPicker onSelect={handleNewBlankTemplate} />
           </div>
         </div>
+      )}
+
+      {showTeleprompter && (
+        <TeleprompterMode
+          template={template}
+          selections={selections}
+          overrides={overrides}
+          onClose={() => setShowTeleprompter(false)}
+        />
       )}
     </div>
   );

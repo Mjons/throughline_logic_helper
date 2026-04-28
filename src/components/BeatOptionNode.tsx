@@ -21,7 +21,9 @@ export type BeatOptionData = {
   ) => void;
   onRegenerateOption?: (beatId: string, optionId: string) => void;
   isUserTemplate?: boolean;
+  sharpening?: boolean;
   onDeleteOption?: (beatId: string, optionId: string) => void;
+  onSharpen?: (beatId: string, optionId: string) => void;
 };
 
 export type BeatOptionNodeType = Node<BeatOptionData, "beatOption">;
@@ -131,6 +133,23 @@ function Impl({ data }: NodeProps<BeatOptionNodeType>) {
           aria-label="Delete option"
         >
           &times;
+        </button>
+      )}
+      {data.onSharpen && !data.committed && !editing && (
+        <button
+          type="button"
+          className={`card-sharpen-btn ${data.sharpening ? "loading" : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            data.onSharpen?.(data.beatId, data.optionId);
+          }}
+          onMouseDown={stop}
+          onDoubleClick={stop}
+          disabled={data.sharpening}
+          title="Sharpen this option — make it more specific and concise"
+          aria-label="Sharpen option"
+        >
+          {data.sharpening ? "..." : "\u2726"}
         </button>
       )}
       {data.isGenerated && !data.committed && !editing && (

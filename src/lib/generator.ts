@@ -1,8 +1,12 @@
 import type { LLMClient } from "./llm-client";
 import type { UserCorpus } from "./corpus";
-import type { Template, BeatOption, Beat, OptionSource } from "../types";
+import type { ToneLevel, BeatOption, Beat, OptionSource } from "../types";
 import type { FrameworkDefinition } from "./template-selector";
-import { GENERATE_BEAT, buildBeatGenerationPrompt } from "./prompts";
+import {
+  GENERATE_BEAT,
+  buildBeatGenerationPrompt,
+  tonePrompt,
+} from "./prompts";
 import { genId } from "./corpus";
 
 export type GenerationProgress = {
@@ -58,6 +62,7 @@ async function generateBeatOptions(
   corpus: UserCorpus,
   optionCount: number,
   model?: string,
+  tone?: ToneLevel,
 ): Promise<BeatOption[]> {
   const facts = corpus.extractedFacts.map((f) => f.claim);
   const boundaries = corpus.permissionBoundaries;
@@ -72,7 +77,9 @@ async function generateBeatOptions(
   );
 
   const result = await client.chat([{ role: "user", content: userPrompt }], {
-    systemPrompt: GENERATE_BEAT.replace("{optionCount}", String(optionCount)),
+    systemPrompt:
+      GENERATE_BEAT.replace("{optionCount}", String(optionCount)) +
+      tonePrompt(tone),
     model,
     temperature: 0.7,
   });
@@ -124,6 +131,7 @@ export async function generateThroughline(
   optionsPerBeat: number,
   model: string | undefined,
   onProgress: (progress: GenerationProgress) => void,
+  tone?: ToneLevel,
 ): Promise<GeneratedTemplate> {
   const totalBeats = framework.beats.length;
   onProgress({ stage: "generating", completedBeats: 0, totalBeats });
@@ -136,6 +144,7 @@ export async function generateThroughline(
       corpus,
       optionsPerBeat,
       model,
+      tone,
     );
     onProgress({
       stage: "generating",

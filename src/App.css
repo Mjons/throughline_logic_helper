@@ -1756,6 +1756,350 @@ textarea.beat-cluster-prompt.editing {
   overflow-y: auto;
 }
 
+/* ---------- Practice button in side panel ---------- */
+.sp-practice-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.sp-practice-btn:hover {
+  background: var(--accent-strong);
+}
+
+/* ---------- Teleprompter mode ---------- */
+.tp-overlay {
+  position: fixed;
+  inset: 0;
+  background: #1a1918;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #f5f0e8;
+  animation: tp-fade-in 0.3s ease-out;
+}
+@keyframes tp-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.tp-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.tp-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+.tp-counter {
+  position: absolute;
+  top: 20px;
+  left: 28px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.tp-close {
+  position: absolute;
+  top: 14px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 28px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+.tp-close:hover {
+  color: #fff;
+}
+.tp-content {
+  max-width: 800px;
+  width: 90%;
+  text-align: center;
+  cursor: pointer;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+.tp-beat-label {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: var(--accent);
+  opacity: 0.8;
+}
+.tp-option-title {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.6);
+}
+.tp-spoken-line {
+  font-size: 36px;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #f5f0e8;
+  max-width: 700px;
+}
+.tp-timer-bar {
+  width: 200px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  margin-top: 12px;
+}
+.tp-timer-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 1s linear;
+}
+.tp-controls {
+  position: absolute;
+  bottom: 50px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.tp-ctrl-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+.tp-ctrl-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+.tp-ctrl-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.tp-ctrl-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.tp-speed {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tp-speed-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.6);
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+.tp-speed-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+.tp-speed-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  min-width: 28px;
+  text-align: center;
+}
+.tp-hints {
+  position: absolute;
+  bottom: 18px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.5px;
+}
+
+/* ---------- Tone slider ---------- */
+.tone-slider {
+  margin-top: 8px;
+}
+.tone-slider-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+.tone-slider-track {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+  height: 20px;
+}
+.tone-slider-line {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 50%;
+  height: 2px;
+  background: var(--border);
+  transform: translateY(-50%);
+  z-index: 0;
+}
+.tone-slider-stop {
+  position: relative;
+  z-index: 1;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+}
+.tone-slider-stop:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.tone-stop-dot {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  transition: all 0.15s ease;
+}
+.tone-slider-stop.active .tone-stop-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.2);
+}
+.tone-slider-stop:hover:not(:disabled) .tone-stop-dot {
+  border-color: var(--accent);
+}
+.tone-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+.tone-slider-labels span {
+  font-size: 10px;
+  color: var(--text-faint);
+}
+.tone-slider-labels span:nth-child(2) {
+  font-weight: 600;
+  color: var(--accent-strong);
+}
+
+/* ---------- Sharpen button ---------- */
+.card-sharpen-btn {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.12s ease,
+    background 0.12s ease,
+    color 0.12s ease;
+  z-index: 5;
+}
+.beat-option:hover .card-sharpen-btn {
+  opacity: 1;
+}
+.card-sharpen-btn:hover:not(:disabled) {
+  background: #7b4ba0;
+  color: white;
+  border-color: #7b4ba0;
+}
+.card-sharpen-btn:disabled {
+  cursor: not-allowed;
+}
+.card-sharpen-btn.loading {
+  opacity: 1;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ---------- Per-beat context hint ---------- */
+.beat-context-hint {
+  padding: 6px 20px 8px;
+  border-top: 1px dashed var(--border);
+}
+.beat-context-toggle {
+  background: none;
+  border: none;
+  font-size: 11px;
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 2px 0;
+  font-family: inherit;
+  font-style: italic;
+  transition: color 0.15s ease;
+}
+.beat-context-toggle:hover {
+  color: var(--accent);
+}
+.beat-context-textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  resize: vertical;
+  max-height: 120px;
+  outline: none;
+  line-height: 1.4;
+}
+.beat-context-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
 /* ---------- Add option button on clusters ---------- */
 .add-option-btn {
   position: absolute;

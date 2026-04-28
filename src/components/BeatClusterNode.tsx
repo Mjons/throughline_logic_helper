@@ -5,6 +5,7 @@ export type BeatClusterData = {
   name: string;
   subtitle?: string;
   prompt?: string;
+  contextHint?: string;
   beatIndex: number;
   committed: boolean;
   hasSelection: boolean;
@@ -20,6 +21,7 @@ export type BeatClusterData = {
   ) => void;
   onRegenerateBeat?: (beatId: string) => void;
   onAddOption?: (beatId: string) => void;
+  onUpdateContextHint?: (beatId: string, hint: string) => void;
 };
 
 export type BeatClusterNodeType = Node<BeatClusterData, "beatCluster">;
@@ -29,6 +31,8 @@ function Impl({ data }: NodeProps<BeatClusterNodeType>) {
   const [draftName, setDraftName] = useState(data.name);
   const [draftSubtitle, setDraftSubtitle] = useState(data.subtitle ?? "");
   const [draftPrompt, setDraftPrompt] = useState(data.prompt ?? "");
+  const [hintOpen, setHintOpen] = useState(!!data.contextHint);
+  const [draftHint, setDraftHint] = useState(data.contextHint ?? "");
 
   useEffect(() => {
     if (!editing) {
@@ -185,6 +189,50 @@ function Impl({ data }: NodeProps<BeatClusterNodeType>) {
               <div className="beat-cluster-prompt">{data.prompt}</div>
             ) : null}
           </>
+        )}
+        {data.isUserTemplate && !data.committed && !editing && (
+          <div className="beat-context-hint">
+            {hintOpen ? (
+              <textarea
+                className="beat-context-textarea nopan"
+                value={draftHint}
+                onChange={(e) => setDraftHint(e.target.value)}
+                onBlur={() => {
+                  data.onUpdateContextHint?.(data.beatId, draftHint.trim());
+                }}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  if (e.key === "Escape") setHintOpen(false);
+                }}
+                onKeyUp={stopKey}
+                onClick={stop}
+                onMouseDown={stop}
+                onDoubleClick={stop}
+                onWheel={stopWheel}
+                onCopy={stopClipboard}
+                onCut={stopClipboard}
+                onPaste={stopClipboard}
+                placeholder="Add context for this beat (e.g. 'Focus on regulatory obstacles, not competitors')"
+                rows={2}
+                spellCheck
+              />
+            ) : (
+              <button
+                className="beat-context-toggle"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHintOpen(true);
+                }}
+                onMouseDown={stop}
+              >
+                {data.contextHint
+                  ? "Context: " +
+                    data.contextHint.slice(0, 40) +
+                    (data.contextHint.length > 40 ? "..." : "")
+                  : "+ Add context"}
+              </button>
+            )}
+          </div>
         )}
         {data.isGenerated && !data.committed && !editing && (
           <button

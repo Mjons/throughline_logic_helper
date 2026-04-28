@@ -1,3 +1,25 @@
+import type { ToneLevel } from "../types";
+
+export const TONE_LABELS: Record<ToneLevel, string> = {
+  1: "Formal",
+  2: "Professional",
+  3: "Balanced",
+  4: "Conversational",
+  5: "Bold",
+};
+
+const TONE_INSTRUCTIONS: Record<ToneLevel, string> = {
+  1: "Write in formal, professional language. Use third person. Avoid contractions. Suitable for board presentations, regulatory filings, and institutional communications.",
+  2: "Write in polished professional language. Clear and direct but not stiff. Suitable for investor decks, enterprise sales, and partner proposals.",
+  3: "Write in a natural, confident tone. Mix professional clarity with human warmth. Suitable for most pitches, keynotes, and business communications.",
+  4: "Write in a warm, direct, first-person voice. Use contractions. Short sentences. Suitable for founder pitches, blog posts, and community updates.",
+  5: "Write with energy and conviction. Punchy sentences. Strong opinions. Rhetorical questions. Suitable for cold outreach, tweet threads, and manifesto-style content.",
+};
+
+export function tonePrompt(level?: ToneLevel): string {
+  return `\n\nTone: ${TONE_INSTRUCTIONS[level ?? 3]}`;
+}
+
 export const INGEST_INTERVIEW = `You are a narrative strategist helping a user build a throughline — a structured narrative for a pitch, story, or strategic argument. Your job right now is to learn about their business, product, or project so you can later generate a tailored throughline.
 
 Ask focused, specific questions. Do NOT ask open-ended "tell me about your company" questions. Instead, work through these dimensions one at a time:
@@ -149,3 +171,50 @@ Return a JSON object:
 }
 
 Generate between 4 and 9 beats. Each beat should build on the previous one toward a coherent argument or narrative.`;
+
+export const SHARPEN_OPTION = `You are sharpening a single narrative beat option. Make it:
+- More specific (use real numbers, names, dates from the user's context)
+- More concise (cut filler words, tighten sentences)
+- More compelling (stronger verbs, clearer stakes, sharper contrast)
+
+Do NOT change the core argument or angle. Same idea, better execution.
+
+Return ONLY a JSON object:
+{
+  "title": "sharpened title",
+  "description": "sharpened description",
+  "spokenLine": "sharpened spoken version, 1-2 sentences"
+}`;
+
+export const EVALUATE_CONFIDENCE = `Evaluate this narrative beat option on three dimensions. Score each 0 or 1.
+
+1. **Specificity** — Does it use real numbers, names, dates, or concrete details? (not vague claims)
+2. **Grounding** — Is it based on user-provided facts rather than generic filler?
+3. **Audience fit** — Does the language match the target audience?
+
+Return ONLY a JSON object:
+{
+  "specificity": 0 or 1,
+  "grounding": 0 or 1,
+  "audienceFit": 0 or 1,
+  "specificityNote": "brief reason",
+  "groundingNote": "brief reason",
+  "audienceFitNote": "brief reason"
+}`;
+
+export const GENERATE_OBJECTIONS = `You are anticipating audience objections to a narrative beat.
+
+For this beat, generate 2-3 likely objections the audience will have.
+For each objection, provide:
+- The objection itself (what they're thinking or will ask)
+- Why they're thinking it (the underlying concern)
+- A suggested response (1-2 sentences, specific and grounded)
+
+Return ONLY a JSON array:
+[
+  {
+    "objection": "the objection text",
+    "underlying": "why they think this",
+    "response": "suggested response"
+  }
+]`;

@@ -24,6 +24,7 @@ export type Beat = {
   name: string;
   subtitle?: string;
   prompt?: string;
+  contextHint?: string;
   options: BeatOption[];
 };
 
@@ -34,12 +35,15 @@ export type SequencingNotes = {
   [key: string]: string | string[] | undefined;
 };
 
+export type ToneLevel = 1 | 2 | 3 | 4 | 5;
+
 export type Template = {
   id: string;
   name: string;
   title?: string;
   description: string;
   audience?: string;
+  tone?: ToneLevel;
   beats: Beat[];
   sequencingNotes?: SequencingNotes;
 };

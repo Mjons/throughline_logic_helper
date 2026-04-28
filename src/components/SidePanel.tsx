@@ -1,5 +1,6 @@
 import { useState } from "react";
-import type { Template, OptionSourceType } from "../types";
+import type { Template, OptionSourceType, ToneLevel } from "../types";
+import { ToneSlider } from "./ToneSlider";
 
 type OptionOverride = { title?: string; description?: string };
 type ClusterOverride = { name?: string; subtitle?: string; prompt?: string };
@@ -19,7 +20,12 @@ type Props = {
   onExport: () => void;
   onCopyMarkdown: () => void;
   onCopyAll: () => void;
-  onUpdateMeta?: (fields: { name?: string; audience?: string }) => void;
+  onUpdateMeta?: (fields: {
+    title?: string;
+    audience?: string;
+    tone?: ToneLevel;
+  }) => void;
+  onPractice?: () => void;
 };
 
 export function SidePanel({
@@ -33,8 +39,10 @@ export function SidePanel({
   onCopyMarkdown,
   onCopyAll,
   onUpdateMeta,
+  onPractice,
 }: Props) {
   const chosenCount = Object.keys(selections).length;
+  const toneValue: ToneLevel = (template.tone ?? 3) as ToneLevel;
   const total = template.beats.length;
 
   // Source breakdown across all options in the template
@@ -116,38 +124,46 @@ export function SidePanel({
         )}
 
         {canEditMeta && (
-          <div className="sp-audience-row">
-            <span className="sp-audience-label">Audience</span>
-            {editingAudience ? (
-              <input
-                className="sp-audience-input"
-                value={draftAudience}
-                onChange={(e) => setDraftAudience(e.target.value)}
-                onBlur={commitAudience}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") commitAudience();
-                  if (e.key === "Escape") {
+          <>
+            <div className="sp-audience-row">
+              <span className="sp-audience-label">Audience</span>
+              {editingAudience ? (
+                <input
+                  className="sp-audience-input"
+                  value={draftAudience}
+                  onChange={(e) => setDraftAudience(e.target.value)}
+                  onBlur={commitAudience}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") commitAudience();
+                    if (e.key === "Escape") {
+                      setDraftAudience(template.audience ?? "");
+                      setEditingAudience(false);
+                    }
+                  }}
+                  autoFocus
+                  placeholder="e.g. Investor, Customer, Partner..."
+                  spellCheck
+                />
+              ) : (
+                <span
+                  className="sp-audience-value"
+                  onClick={() => {
                     setDraftAudience(template.audience ?? "");
-                    setEditingAudience(false);
-                  }
-                }}
-                autoFocus
-                placeholder="e.g. Investor, Customer, Partner..."
-                spellCheck
-              />
-            ) : (
-              <span
-                className="sp-audience-value"
-                onClick={() => {
-                  setDraftAudience(template.audience ?? "");
-                  setEditingAudience(true);
-                }}
-                title="Click to set audience"
-              >
-                {template.audience || "Set audience..."}
-              </span>
-            )}
-          </div>
+                    setEditingAudience(true);
+                  }}
+                  title="Click to set audience"
+                >
+                  {template.audience || "Set audience..."}
+                </span>
+              )}
+            </div>
+
+            <ToneSlider
+              value={toneValue}
+              onChange={(level) => onUpdateMeta?.({ tone: level })}
+              disabled={committed}
+            />
+          </>
         )}
 
         <div className="sp-hint">
@@ -228,6 +244,12 @@ export function SidePanel({
           Export JSON
         </button>
       </div>
+
+      {committed && onPractice && (
+        <button className="sp-practice-btn" onClick={onPractice}>
+          Practice
+        </button>
+      )}
     </aside>
   );
 }
