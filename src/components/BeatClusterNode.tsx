@@ -9,11 +9,14 @@ export type BeatClusterData = {
   committed: boolean;
   hasSelection: boolean;
   beatId: string;
+  isGenerated?: boolean;
+  regenerating?: boolean;
   onEdit?: (
     beatId: string,
     field: "name" | "subtitle" | "prompt",
     value: string,
   ) => void;
+  onRegenerateBeat?: (beatId: string) => void;
 };
 
 export type BeatClusterNodeType = Node<BeatClusterData, "beatCluster">;
@@ -159,6 +162,22 @@ function Impl({ data }: NodeProps<BeatClusterNodeType>) {
               <div className="beat-cluster-prompt">{data.prompt}</div>
             ) : null}
           </>
+        )}
+        {data.isGenerated && !data.committed && !editing && (
+          <button
+            type="button"
+            className={`regen-beat-btn ${data.regenerating ? "loading" : ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              data.onRegenerateBeat?.(data.beatId);
+            }}
+            onMouseDown={stop}
+            disabled={data.regenerating}
+            title="Regenerate all options for this beat"
+            aria-label="Regenerate beat"
+          >
+            {data.regenerating ? "..." : "\u21BB"}
+          </button>
         )}
       </div>
     </div>

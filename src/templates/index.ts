@@ -5,6 +5,7 @@ import { raskinCreatorsTemplate } from "./raskin-creators";
 import { panelHausWhitepaperTemplate } from "./panel-haus-whitepaper";
 import { delphicaEnterpriseTemplate } from "./delphica-enterprise";
 import { delphicaPriviaTemplate } from "./delphica-privia";
+import { raskinDelphicaTemplate } from "./raskin-delphica";
 
 export const templates: Template[] = [
   raskinTemplate,
@@ -13,6 +14,7 @@ export const templates: Template[] = [
   panelHausWhitepaperTemplate,
   delphicaEnterpriseTemplate,
   delphicaPriviaTemplate,
+  raskinDelphicaTemplate,
 ];
 
 export function getTemplate(id: string): Template | undefined {

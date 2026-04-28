@@ -1,5 +1,7 @@
 import { memo, useEffect, useState } from "react";
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
+import type { OptionSource } from "../types";
+import { SourceBadge } from "./SourceBadge";
 
 export type BeatOptionData = {
   title: string;
@@ -8,12 +10,16 @@ export type BeatOptionData = {
   committed: boolean;
   beatId: string;
   optionId: string;
+  source?: OptionSource;
+  isGenerated?: boolean;
+  regenerating?: boolean;
   onEdit?: (
     beatId: string,
     optionId: string,
     field: "title" | "description",
     value: string,
   ) => void;
+  onRegenerateOption?: (beatId: string, optionId: string) => void;
 };
 
 export type BeatOptionNodeType = Node<BeatOptionData, "beatOption">;
@@ -30,11 +36,17 @@ function Impl({ data }: NodeProps<BeatOptionNodeType>) {
     }
   }, [data.title, data.description, editing]);
 
+  const sourceClass =
+    data.source && data.source.type !== "manual"
+      ? `has-source source-${data.source.type}`
+      : "";
+
   const classes = [
     "beat-option",
     data.selected ? "selected" : "",
     data.committed ? "committed" : "",
     editing ? "editing" : "",
+    sourceClass,
   ]
     .filter(Boolean)
     .join(" ");
@@ -98,6 +110,23 @@ function Impl({ data }: NodeProps<BeatOptionNodeType>) {
           {editing ? "✓" : "✎"}
         </button>
       ) : null}
+      {data.isGenerated && !data.committed && !editing && (
+        <button
+          type="button"
+          className={`card-regen-btn ${data.regenerating ? "loading" : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            data.onRegenerateOption?.(data.beatId, data.optionId);
+          }}
+          onMouseDown={stop}
+          onDoubleClick={stop}
+          disabled={data.regenerating}
+          title="Regenerate this option"
+          aria-label="Regenerate option"
+        >
+          {data.regenerating ? "..." : "\u21BB"}
+        </button>
+      )}
       {editing ? (
         <>
           <textarea
@@ -133,6 +162,9 @@ function Impl({ data }: NodeProps<BeatOptionNodeType>) {
           {data.description ? (
             <div className="beat-option-desc">{data.description}</div>
           ) : null}
+          {data.source && data.source.type !== "manual" && (
+            <SourceBadge source={data.source} />
+          )}
         </>
       )}
       <Handle type="source" position={Position.Right} isConnectable={false} />

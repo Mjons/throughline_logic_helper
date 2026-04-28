@@ -10,6 +10,12 @@ type Props = {
   onUncommit: () => void;
   view: "canvas" | "overview";
   onToggleView: () => void;
+  onAlignThroughline: () => void;
+  hasSelections: boolean;
+  hasApiKey: boolean;
+  onOpenSettings: () => void;
+  onOpenIngest: () => void;
+  ingestOpen: boolean;
 };
 
 export function TopBar({
@@ -22,6 +28,12 @@ export function TopBar({
   onUncommit,
   view,
   onToggleView,
+  onAlignThroughline,
+  hasSelections,
+  hasApiKey,
+  onOpenSettings,
+  onOpenIngest,
+  ingestOpen,
 }: Props) {
   const active = templates.find((t) => t.id === templateId);
 
@@ -46,6 +58,27 @@ export function TopBar({
             ))}
           </select>
         </div>
+
+        {view === "canvas" && hasApiKey && (
+          <button
+            className={`tb-btn ${ingestOpen ? "active" : ""}`}
+            onClick={onOpenIngest}
+            title="Open the AI agent to build a throughline from your business context"
+          >
+            {ingestOpen ? "Close agent" : "Agent"}
+          </button>
+        )}
+
+        {view === "canvas" && hasSelections && (
+          <button
+            className="tb-btn"
+            onClick={onAlignThroughline}
+            title="Top-align all selected cards in the throughline"
+          >
+            Align
+          </button>
+        )}
+
         <button
           className={`tb-btn ${view === "overview" ? "active" : ""}`}
           onClick={onToggleView}
@@ -73,6 +106,27 @@ export function TopBar({
             </button>
           )
         ) : null}
+
+        <button
+          className={`tb-btn tb-btn-icon ${hasApiKey ? "has-key" : ""}`}
+          onClick={onOpenSettings}
+          title={hasApiKey ? "API key configured" : "Set up your API key"}
+          aria-label="API settings"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M6.8 1.6h2.4l.35 2.1 1.8.75 1.7-1.25 1.7 1.7-1.25 1.7.75 1.8 2.1.35v2.4l-2.1.35-.75 1.8 1.25 1.7-1.7 1.7-1.7-1.25-1.8.75-.35 2.1H6.8l-.35-2.1-1.8-.75-1.7 1.25-1.7-1.7 1.25-1.7-.75-1.8L.65 9.2V6.8l2.1-.35.75-1.8L2.25 2.95l1.7-1.7 1.7 1.25 1.8-.75z" />
+            <circle cx="8" cy="8" r="2.2" />
+          </svg>
+        </button>
       </div>
     </header>
   );

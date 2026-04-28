@@ -1,4 +1,4 @@
-import type { Template } from "../types";
+import type { Template, OptionSourceType } from "../types";
 
 type OptionOverride = { title?: string; description?: string };
 type ClusterOverride = { name?: string; subtitle?: string; prompt?: string };
@@ -32,6 +32,23 @@ export function SidePanel({
   const chosenCount = Object.keys(selections).length;
   const total = template.beats.length;
 
+  // Source breakdown across all options in the template
+  const sourceCounts: Record<OptionSourceType | "none", number> = {
+    user: 0,
+    research: 0,
+    hybrid: 0,
+    manual: 0,
+    none: 0,
+  };
+  for (const beat of template.beats) {
+    for (const opt of beat.options) {
+      if (opt.source) sourceCounts[opt.source.type]++;
+      else sourceCounts.none++;
+    }
+  }
+  const hasSourceData =
+    sourceCounts.user + sourceCounts.research + sourceCounts.hybrid > 0;
+
   return (
     <aside className="side-panel">
       <div className="sp-header">
@@ -42,6 +59,34 @@ export function SidePanel({
             : `Pick one option per beat · ${chosenCount} / ${total} chosen`}
         </div>
       </div>
+
+      {hasSourceData && (
+        <div className="sp-sources">
+          <div className="sp-sources-label">Sources</div>
+          <div className="sp-sources-row">
+            {sourceCounts.user > 0 && (
+              <span className="sp-source-tag source-user">
+                {sourceCounts.user} from your docs
+              </span>
+            )}
+            {sourceCounts.research > 0 && (
+              <span className="sp-source-tag source-research">
+                {sourceCounts.research} from research
+              </span>
+            )}
+            {sourceCounts.hybrid > 0 && (
+              <span className="sp-source-tag source-hybrid">
+                {sourceCounts.hybrid} hybrid
+              </span>
+            )}
+            {sourceCounts.manual > 0 && (
+              <span className="sp-source-tag source-manual">
+                {sourceCounts.manual} manual
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="sp-beats">
         {template.beats.map((beat, i) => {

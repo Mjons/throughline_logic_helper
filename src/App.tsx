@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   ReactFlow,
   Background,
@@ -21,6 +21,27 @@ import { BeatOptionNode } from "./components/BeatOptionNode";
 import { SidePanel } from "./components/SidePanel";
 import { ThroughlineOverview } from "./components/ThroughlineOverview";
 import { TopBar } from "./components/TopBar";
+import { ApiKeySettings } from "./components/ApiKeySettings";
+import { IngestPanel } from "./components/IngestPanel";
+import {
+  type LLMSettings,
+  type LLMClient,
+  loadLLMSettings,
+  createClient,
+} from "./lib/llm-client";
+import {
+  type UserCorpus,
+  createEmptyCorpus,
+  loadCorpus,
+  saveCorpus,
+} from "./lib/corpus";
+import { regenerateBeat, regenerateOption } from "./lib/regenerator";
+import {
+  type FrameworkSelection,
+  selectFramework,
+  getFrameworkDefinition,
+} from "./lib/template-selector";
+import { type GenerationProgress, generateThroughline } from "./lib/generator";
 
 const CLUSTER_W = 300;
 const CLUSTER_GAP = 90;
@@ -132,6 +153,11 @@ function buildNodes(
     field: "name" | "subtitle" | "prompt",
     value: string,
   ) => void,
+  isGenerated: boolean,
+  regeneratingBeats: Set<string>,
+  regeneratingOptions: Set<string>,
+  onRegenerateBeat?: (beatId: string) => void,
+  onRegenerateOption?: (beatId: string, optionId: string) => void,
 ): Node[] {
   const nodes: Node[] = [];
   template.beats.forEach((beat, beatIndex) => {
@@ -164,7 +190,10 @@ function buildNodes(
         committed,
         hasSelection: !!selections[beat.id],
         beatId: beat.id,
+        isGenerated,
+        regenerating: regeneratingBeats.has(beat.id),
         onEdit: onEditCluster,
+        onRegenerateBeat,
       },
       style: {
         width: CLUSTER_W,
@@ -195,7 +224,11 @@ function buildNodes(
           committed,
           beatId: beat.id,
           optionId: option.id,
+          source: option.source,
+          isGenerated,
+          regenerating: regeneratingOptions.has(`${beat.id}:${option.id}`),
           onEdit: onEditOption,
+          onRegenerateOption,
         },
         parentId: clusterId,
         extent: "parent",
@@ -371,7 +404,279 @@ export default function App() {
     PersistedState["perTemplate"]
   >(() => loadPersisted().perTemplate);
 
-  const template = getTemplate(templateId)!;
+  // --- Agent state ---
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [ingestOpen, setIngestOpen] = useState(false);
+  const [llmSettings, setLlmSettings] = useState<LLMSettings | null>(() =>
+    loadLLMSettings(),
+  );
+  const [corpus, setCorpus] = useState<UserCorpus>(
+    () => loadCorpus(templateId) ?? createEmptyCorpus(),
+  );
+
+  const llmClient: LLMClient | null = useMemo(
+    () =>
+      llmSettings
+        ? createClient(llmSettings.provider, llmSettings.apiKey)
+        : null,
+    [llmSettings],
+  );
+
+  const handleCorpusUpdate = useCallback(
+    (updated: UserCorpus) => {
+      setCorpus(updated);
+      saveCorpus(templateId, updated);
+    },
+    [templateId],
+  );
+
+  // --- Generation pipeline state ---
+  const [generating, setGenerating] = useState(false);
+  const [genProgress, setGenProgress] = useState<GenerationProgress | null>(
+    null,
+  );
+  const [frameworkSelection, setFrameworkSelection] =
+    useState<FrameworkSelection | null>(null);
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [pendingFrameworkId, setPendingFrameworkId] = useState<string | null>(
+    null,
+  );
+  const [generatedTemplates, setGeneratedTemplates] = useState<Template[]>([]);
+  const [regeneratingBeats, setRegeneratingBeats] = useState<Set<string>>(
+    new Set(),
+  );
+  const [regeneratingOptions, setRegeneratingOptions] = useState<Set<string>>(
+    new Set(),
+  );
+
+  // Load corpus when template changes
+  useEffect(() => {
+    setCorpus(loadCorpus(templateId) ?? createEmptyCorpus());
+  }, [templateId]);
+
+  // All templates = static + generated
+  const allTemplates = useMemo(
+    () => [...templates, ...generatedTemplates],
+    [generatedTemplates],
+  );
+
+  const template =
+    allTemplates.find((t) => t.id === templateId) ?? getTemplate(templateId)!;
+
+  const handleGenerate = useCallback(
+    async (mode: "guided" | "lfg") => {
+      if (!llmClient || generating) return;
+
+      setGenerating(true);
+      setGenProgress({ stage: "selecting", completedBeats: 0 });
+
+      try {
+        // Stage 1: Select framework
+        const selection = await selectFramework(
+          llmClient,
+          corpus,
+          llmSettings?.model,
+        );
+        setFrameworkSelection(selection);
+
+        if (mode === "guided") {
+          // Pause for user confirmation
+          setAwaitingConfirmation(true);
+          setPendingFrameworkId(selection.frameworkId);
+          setGenerating(false);
+          setGenProgress(null);
+          return;
+        }
+
+        // LFG mode: proceed immediately
+        await runGeneration(selection.frameworkId);
+      } catch (err) {
+        setGenProgress({
+          stage: "error",
+          completedBeats: 0,
+          error: err instanceof Error ? err.message : "Generation failed",
+        });
+        setGenerating(false);
+      }
+    },
+    [llmClient, generating, corpus, llmSettings],
+  );
+
+  const handleConfirmFramework = useCallback(async () => {
+    const fwId = pendingFrameworkId;
+    if (!fwId) return;
+    setAwaitingConfirmation(false);
+    setGenerating(true);
+    setGenProgress({ stage: "generating", completedBeats: 0 });
+    try {
+      await runGeneration(fwId);
+    } catch (err) {
+      setGenProgress({
+        stage: "error",
+        completedBeats: 0,
+        error: err instanceof Error ? err.message : "Generation failed",
+      });
+      setGenerating(false);
+    }
+  }, [pendingFrameworkId]);
+
+  const handleSwitchFramework = useCallback((id: string) => {
+    setPendingFrameworkId(id);
+  }, []);
+
+  async function runGeneration(frameworkId: string) {
+    if (!llmClient) return;
+
+    const framework = getFrameworkDefinition(frameworkId);
+    if (!framework) {
+      setGenProgress({
+        stage: "error",
+        completedBeats: 0,
+        error: `Unknown framework: ${frameworkId}`,
+      });
+      setGenerating(false);
+      return;
+    }
+
+    const generated = await generateThroughline(
+      llmClient,
+      framework,
+      corpus,
+      4, // options per beat
+      llmSettings?.model,
+      setGenProgress,
+    );
+
+    // Add the generated template and switch to it
+    setGeneratedTemplates((prev) => [...prev, generated]);
+    setTemplateId(generated.id);
+    setSelections({});
+    setCommitted(false);
+    setOverrides({});
+    setGenerating(false);
+    setIngestOpen(false);
+    setAwaitingConfirmation(false);
+    setFrameworkSelection(null);
+  }
+
+  // Check if current template is generated (has source tags on options)
+  const isGeneratedTemplate = template.beats.some((b) =>
+    b.options.some((o) => o.source != null),
+  );
+
+  const handleRegenerateBeat = useCallback(
+    async (beatId: string) => {
+      if (!llmClient || regeneratingBeats.has(beatId)) return;
+      setRegeneratingBeats((prev) => new Set(prev).add(beatId));
+
+      try {
+        const beat = template.beats.find((b) => b.id === beatId);
+        if (!beat) return;
+
+        const newOptions = await regenerateBeat(
+          llmClient,
+          beat,
+          corpus,
+          4,
+          llmSettings?.model,
+        );
+
+        if (newOptions.length > 0) {
+          // Update the template in generatedTemplates
+          setGeneratedTemplates((prev) =>
+            prev.map((t) =>
+              t.id === templateId
+                ? {
+                    ...t,
+                    beats: t.beats.map((b) =>
+                      b.id === beatId ? { ...b, options: newOptions } : b,
+                    ),
+                  }
+                : t,
+            ),
+          );
+          // Clear selection for this beat since options changed
+          setSelections((prev) => {
+            const next = { ...prev };
+            delete next[beatId];
+            return next;
+          });
+        }
+      } catch (err) {
+        console.error("Beat regeneration failed:", err);
+      }
+
+      setRegeneratingBeats((prev) => {
+        const next = new Set(prev);
+        next.delete(beatId);
+        return next;
+      });
+    },
+    [llmClient, corpus, template, templateId, llmSettings, regeneratingBeats],
+  );
+
+  const handleRegenerateOption = useCallback(
+    async (beatId: string, optionId: string) => {
+      const key = `${beatId}:${optionId}`;
+      if (!llmClient || regeneratingOptions.has(key)) return;
+      setRegeneratingOptions((prev) => new Set(prev).add(key));
+
+      try {
+        const beat = template.beats.find((b) => b.id === beatId);
+        if (!beat) return;
+
+        const newOption = await regenerateOption(
+          llmClient,
+          beat,
+          optionId,
+          corpus,
+          llmSettings?.model,
+        );
+
+        if (newOption) {
+          setGeneratedTemplates((prev) =>
+            prev.map((t) =>
+              t.id === templateId
+                ? {
+                    ...t,
+                    beats: t.beats.map((b) =>
+                      b.id === beatId
+                        ? {
+                            ...b,
+                            options: b.options.map((o) =>
+                              o.id === optionId
+                                ? { ...newOption, id: optionId }
+                                : o,
+                            ),
+                          }
+                        : b,
+                    ),
+                  }
+                : t,
+            ),
+          );
+          // Clear selection if this option was selected
+          setSelections((prev) => {
+            if (prev[beatId] === optionId) {
+              const next = { ...prev };
+              delete next[beatId];
+              return next;
+            }
+            return prev;
+          });
+        }
+      } catch (err) {
+        console.error("Option regeneration failed:", err);
+      }
+
+      setRegeneratingOptions((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    },
+    [llmClient, corpus, template, templateId, llmSettings, regeneratingOptions],
+  );
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -441,6 +746,11 @@ export default function App() {
       overrides,
       handleEditOption,
       handleEditCluster,
+      isGeneratedTemplate,
+      regeneratingBeats,
+      regeneratingOptions,
+      handleRegenerateBeat,
+      handleRegenerateOption,
     );
     setNodes((curr) => {
       const posMap = new Map(curr.map((n) => [n.id, n.position]));
@@ -457,6 +767,11 @@ export default function App() {
     overrides,
     handleEditOption,
     handleEditCluster,
+    isGeneratedTemplate,
+    regeneratingBeats,
+    regeneratingOptions,
+    handleRegenerateBeat,
+    handleRegenerateOption,
     setNodes,
     setEdges,
   ]);
@@ -556,10 +871,60 @@ export default function App() {
     setView((v) => (v === "canvas" ? "overview" : "canvas"));
   }, []);
 
+  const handleAlignThroughline = useCallback(() => {
+    if (Object.keys(selections).length === 0) return;
+    setNodes((curr) => {
+      const nodeMap = new Map(curr.map((n) => [n.id, n]));
+
+      // Collect: for each selected beat, the cluster's current Y and the
+      // selected option's local Y within that cluster.
+      const entries: {
+        clusterId: string;
+        clusterY: number;
+        localOptY: number;
+      }[] = [];
+      for (const beat of template.beats) {
+        const selId = selections[beat.id];
+        if (!selId) continue;
+        const clusterId = `cluster-${beat.id}`;
+        const optionId = `option-${selId}`;
+        const cluster = nodeMap.get(clusterId);
+        const optionNode = nodeMap.get(optionId);
+        if (!cluster || !optionNode) continue;
+        // optionNode.position.y is LOCAL to the cluster, not absolute
+        entries.push({
+          clusterId,
+          clusterY: cluster.position.y,
+          localOptY: optionNode.position.y,
+        });
+      }
+      if (entries.length < 2) return curr;
+
+      // Target absolute Y for all selected options = max(clusterY + localOptY)
+      // so we only shift clusters DOWN, never into negative space.
+      const absYs = entries.map((e) => e.clusterY + e.localOptY);
+      const targetAbsY = Math.max(...absYs);
+
+      const clusterYMap = new Map<string, number>();
+      for (const { clusterId, localOptY } of entries) {
+        // We want: newClusterY + localOptY = targetAbsY
+        clusterYMap.set(clusterId, targetAbsY - localOptY);
+      }
+
+      return curr.map((n) => {
+        const newY = clusterYMap.get(n.id);
+        if (newY !== undefined) {
+          return { ...n, position: { x: n.position.x, y: newY } };
+        }
+        return n;
+      });
+    });
+  }, [selections, template, setNodes]);
+
   return (
     <div className="app">
       <TopBar
-        templates={templates}
+        templates={allTemplates}
         templateId={templateId}
         onTemplateChange={setTemplateId}
         committed={committed}
@@ -568,6 +933,12 @@ export default function App() {
         onUncommit={handleUncommit}
         view={view}
         onToggleView={handleToggleView}
+        onAlignThroughline={handleAlignThroughline}
+        hasSelections={Object.keys(selections).length > 0}
+        hasApiKey={!!llmSettings}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenIngest={() => setIngestOpen((v) => !v)}
+        ingestOpen={ingestOpen}
       />
       <div className="main">
         {view === "overview" ? (
@@ -613,19 +984,42 @@ export default function App() {
               </ReactFlow>
               {copyHint ? <div className="toast">{copyHint}</div> : null}
             </div>
-            <SidePanel
-              template={template}
-              selections={selections}
-              committed={committed}
-              overrides={overrides}
-              onReset={handleReset}
-              onExport={handleExport}
-              onCopyMarkdown={handleCopyMarkdown}
-              onCopyAll={handleCopyAll}
-            />
+            {ingestOpen && llmClient ? (
+              <IngestPanel
+                client={llmClient}
+                corpus={corpus}
+                onCorpusUpdate={handleCorpusUpdate}
+                onClose={() => setIngestOpen(false)}
+                onGenerate={handleGenerate}
+                generating={generating}
+                progress={genProgress}
+                frameworkSelection={frameworkSelection}
+                onConfirmFramework={handleConfirmFramework}
+                onSwitchFramework={handleSwitchFramework}
+                awaitingConfirmation={awaitingConfirmation}
+                model={llmSettings?.model}
+              />
+            ) : (
+              <SidePanel
+                template={template}
+                selections={selections}
+                committed={committed}
+                overrides={overrides}
+                onReset={handleReset}
+                onExport={handleExport}
+                onCopyMarkdown={handleCopyMarkdown}
+                onCopyAll={handleCopyAll}
+              />
+            )}
           </>
         )}
       </div>
+
+      <ApiKeySettings
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onSettingsChange={setLlmSettings}
+      />
     </div>
   );
 }
