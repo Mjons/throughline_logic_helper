@@ -1566,15 +1566,16 @@ textarea.beat-cluster-prompt.editing {
 .fw-card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 12px 14px;
+  gap: 6px;
+  padding: 14px 16px;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
   color: var(--text);
+  position: relative;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease,
@@ -1590,54 +1591,106 @@ textarea.beat-cluster-prompt.editing {
   background: linear-gradient(180deg, #fef9f0 0%, #fbf0dd 100%);
   box-shadow: var(--shadow-glow);
 }
-.fw-card-top {
+
+/* Row 1: icon + name + dots */
+.fw-card-row1 {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 8px;
+}
+.fw-card-icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 .fw-card-name {
   font-family: var(--font-serif);
   font-size: 15px;
   font-weight: 600;
   line-height: 1.2;
+  flex: 1;
+  min-width: 0;
 }
-.fw-card-count {
+.fw-card-dots {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+  align-items: center;
+}
+.fw-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+/* Category-colored dots */
+.fw-card.cat-pitch .fw-dot {
+  background: var(--accent);
+}
+.fw-card.cat-storytelling .fw-dot {
+  background: #5b8abf;
+}
+.fw-card.cat-strategy .fw-dot {
+  background: #5a9a56;
+}
+.fw-card.cat-domain .fw-dot {
+  background: #8b7e6e;
+}
+
+/* Tagline */
+.fw-card-tagline {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.4;
+  font-style: italic;
+}
+
+/* Beat names on hover */
+.fw-card-beats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  animation: fw-beats-in 0.15s ease-out;
+}
+@keyframes fw-beats-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fw-card-beat-name {
   font-size: 11px;
   color: var(--text-muted);
-  font-weight: 600;
-  flex-shrink: 0;
-  background: var(--surface);
-  padding: 2px 7px;
-  border-radius: 4px;
 }
+.fw-card-beat-sep {
+  margin: 0 3px;
+  color: var(--text-faint);
+}
+
+/* Best-for tags */
+.fw-card-best {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+/* AI badge */
 .fw-card-badge {
-  display: inline-block;
-  font-size: 10px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 3px 7px;
   border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-  align-self: flex-start;
-}
-.fw-card-desc {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.35;
-}
-.fw-card-flow {
-  font-size: 11px;
-  color: var(--text-faint);
-  line-height: 1.3;
-  font-style: italic;
-}
-.fw-card-best {
-  font-size: 11px;
-  color: var(--accent-strong);
-  font-weight: 500;
+  background: var(--accent);
+  color: white;
 }
 
 /* ---------- Small toolbar buttons ---------- */

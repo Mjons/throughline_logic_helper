@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   type FrameworkDefinition,
   type FrameworkCategory,
@@ -35,9 +36,9 @@ export function FrameworkPicker({ recommendedId, onSelect }: Props) {
   return (
     <div className="fw-picker">
       <div className="fw-picker-header">
-        <div className="fw-picker-title">Choose a framework</div>
+        <div className="fw-picker-title">Choose your framework</div>
         <div className="fw-picker-hint">
-          The AI recommends one based on your context, but you can pick any.
+          Pick the narrative structure that fits your situation.
         </div>
       </div>
 
@@ -71,27 +72,44 @@ function FrameworkCard({
   recommended: boolean;
   onSelect: (id: string) => void;
 }) {
+  const [hovered, setHovered] = useState(false);
   const beatNames = framework.beats.map((b) => b.name);
-  // Show abbreviated beat flow
-  const flow =
-    beatNames.length <= 5
-      ? beatNames.join(" \u2192 ")
-      : beatNames.slice(0, 4).join(" \u2192 ") +
-        ` \u2192 ... \u2192 ${beatNames[beatNames.length - 1]}`;
 
   return (
     <button
-      className={`fw-card ${recommended ? "recommended" : ""}`}
+      className={`fw-card ${recommended ? "recommended" : ""} cat-${framework.category}`}
       onClick={() => onSelect(framework.id)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      <div className="fw-card-top">
-        <div className="fw-card-name">{framework.name}</div>
-        <span className="fw-card-count">{framework.beats.length} beats</span>
+      <div className="fw-card-row1">
+        <span className="fw-card-icon">{framework.icon}</span>
+        <span className="fw-card-name">{framework.name}</span>
+        <span className="fw-card-dots">
+          {framework.beats.map((_, i) => (
+            <span key={i} className="fw-dot" />
+          ))}
+        </span>
       </div>
-      {recommended && <span className="fw-card-badge">AI recommended</span>}
-      <div className="fw-card-desc">{framework.description}</div>
-      <div className="fw-card-flow">{flow}</div>
+
+      <div className="fw-card-tagline">{framework.tagline}</div>
+
+      {hovered && (
+        <div className="fw-card-beats">
+          {beatNames.map((name, i) => (
+            <span key={i} className="fw-card-beat-name">
+              {name}
+              {i < beatNames.length - 1 && (
+                <span className="fw-card-beat-sep">&middot;</span>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="fw-card-best">{framework.bestFor}</div>
+
+      {recommended && <span className="fw-card-badge">AI recommended</span>}
     </button>
   );
 }

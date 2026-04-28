@@ -23,6 +23,8 @@ export type FrameworkDefinition = {
   description: string;
   category: FrameworkCategory;
   bestFor: string;
+  icon: string;
+  tagline: string;
   beats: Beat[];
 };
 
@@ -34,6 +36,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     description: "Full narrative arc for investor pitches and keynotes",
     category: "pitch",
     bestFor: "Investor pitches, keynotes, full decks",
+    icon: "\u{1F3D4}\uFE0F",
+    tagline: "The full arc. River to hoard, nothing left unsaid.",
     beats: [
       {
         id: "river",
@@ -100,6 +104,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     description: "Compressed narrative for cold outreach and short pitches",
     category: "pitch",
     bestFor: "Cold emails, 5-min pitches, elevator conversations",
+    icon: "\u26A1",
+    tagline: "Five beats. Sixty seconds. The cold open that gets the meeting.",
     beats: [
       {
         id: "river",
@@ -144,6 +150,9 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     description: "Industry-standard VC pitch structure",
     category: "pitch",
     bestFor: "Seed through Series B fundraising",
+    icon: "\u{1F3AF}",
+    tagline:
+      "The deck VCs already expect. Hit every slide they're looking for.",
     beats: [
       {
         id: "problem",
@@ -216,6 +225,9 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     description: "Customer-hero marketing framework for copy and campaigns",
     category: "storytelling",
     bestFor: "Website copy, landing pages, email sequences",
+    icon: "\u{1F9B8}",
+    tagline:
+      "Your customer is the hero. You're the guide. Never the other way around.",
     beats: [
       {
         id: "character",
@@ -274,6 +286,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     description: "Teaching-based persuasion for complex sales",
     category: "pitch",
     bestFor: "Consultative enterprise sales, category creation",
+    icon: "\u{1F504}",
+    tagline: "Teach them something they didn't know, then sell the solution.",
     beats: [
       {
         id: "warmer",
@@ -325,6 +339,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     description: "Internal decision document for proposals and strategy",
     category: "strategy",
     bestFor: "Internal proposals, strategic memos, product briefs",
+    icon: "\u{1F4C4}",
+    tagline: "The memo that gets approved. Context, tenets, proposal, FAQ.",
     beats: [
       {
         id: "context",
@@ -376,6 +392,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     description: "Six-beat rapid story prototyping framework",
     category: "storytelling",
     bestFor: "Brand narratives, video scripts, case studies",
+    icon: "\u2728",
+    tagline: "Once upon a time... The six sentences that make any story land.",
     beats: [
       {
         id: "once",
@@ -427,6 +445,9 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     description: "B2B SaaS fundraising with metrics emphasis",
     category: "domain",
     bestFor: "SaaS Series A-C fundraising, board decks",
+    icon: "\u{1F4C8}",
+    tagline:
+      "ARR, NRR, CAC payback. The metrics-first narrative VCs actually read.",
     beats: [
       {
         id: "category",
@@ -485,6 +506,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     description: "Question-driven discovery framework",
     category: "pitch",
     bestFor: "Discovery calls, first meetings, consultative selling",
+    icon: "\u2753",
+    tagline: "Don't pitch. Ask the questions that make them sell themselves.",
     beats: [
       {
         id: "situation",
@@ -522,6 +545,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     description: "Classical 5-act dramatic structure",
     category: "storytelling",
     bestFor: "Case studies, retrospectives, conference talks",
+    icon: "\u{1F4D0}",
+    tagline: "Rise, peak, fall. Classical dramatic structure, zero fluff.",
     beats: [
       {
         id: "exposition",
@@ -566,6 +591,9 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     description: "Product positioning through customer motivation",
     category: "strategy",
     bestFor: "Product positioning, competitive analysis, pricing",
+    icon: "\u{1F511}",
+    tagline:
+      "Why do customers hire your product? Map the motivation, not the feature.",
     beats: [
       {
         id: "situation",
@@ -610,6 +638,8 @@ const FRAMEWORK_BEATS: Record<string, FrameworkDefinition> = {
     description: "Four-beat East Asian narrative — no conflict required",
     category: "storytelling",
     bestFor: "Product announcements, blog posts, no-conflict narratives",
+    icon: "\u{1F38B}",
+    tagline: "No villain, no conflict. Introduce, develop, twist, reconcile.",
     beats: [
       {
         id: "ki",
@@ -745,6 +775,8 @@ export async function generateCustomFramework(
     description: parsed.description ?? "AI-generated framework",
     category: "strategy" as FrameworkCategory,
     bestFor: "Custom — AI-generated for your specific situation",
+    icon: "\u{1F9E9}",
+    tagline: "Custom framework generated for your specific situation.",
     beats: (parsed.beats ?? []).map(
       (b: {
         id: string;
