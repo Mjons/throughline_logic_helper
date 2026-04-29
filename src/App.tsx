@@ -25,6 +25,7 @@ import { ApiKeySettings } from "./components/ApiKeySettings";
 import { IngestPanel } from "./components/IngestPanel";
 import { FrameworkPicker } from "./components/FrameworkPicker";
 import { TeleprompterMode } from "./components/TeleprompterMode";
+import { exportThroughline, importThroughline } from "./lib/import-export";
 import {
   type LLMSettings,
   type LLMClient,
@@ -1103,6 +1104,36 @@ export default function App() {
     URL.revokeObjectURL(url);
   }, [template, selections, committed, overrides]);
 
+  const handleExportFull = useCallback(() => {
+    exportThroughline(template, selections, committed, overrides, true);
+  }, [template, selections, committed, overrides]);
+
+  const handleImport = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json,.throughline.json";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const data = await importThroughline(file);
+      if (!data) {
+        alert("Invalid throughline file.");
+        return;
+      }
+      // Add as user template
+      setUserTemplates((prev) => [...prev, data.template]);
+      setTemplateId(data.template.id);
+      setSelections(data.selections);
+      setCommitted(data.committed);
+      setOverrides(data.overrides);
+      // Restore corpus if included
+      if (data.corpus) {
+        saveCorpus(data.template.id, data.corpus);
+      }
+    };
+    input.click();
+  }, [setUserTemplates]);
+
   const handleCopyMarkdown = useCallback(async () => {
     const md = buildMarkdown(template, selections, overrides);
     try {
@@ -1277,6 +1308,8 @@ export default function App() {
                 canEditMeta={isUserTemplate(templateId)}
                 onReset={handleReset}
                 onExport={handleExport}
+                onExportFull={handleExportFull}
+                onImport={handleImport}
                 onCopyMarkdown={handleCopyMarkdown}
                 onCopyAll={handleCopyAll}
                 onUpdateMeta={handleUpdateMeta}

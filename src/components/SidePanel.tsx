@@ -18,6 +18,8 @@ type Props = {
   canEditMeta?: boolean;
   onReset: () => void;
   onExport: () => void;
+  onExportFull: () => void;
+  onImport: () => void;
   onCopyMarkdown: () => void;
   onCopyAll: () => void;
   onUpdateMeta?: (fields: {
@@ -36,6 +38,8 @@ export function SidePanel({
   canEditMeta,
   onReset,
   onExport,
+  onExportFull,
+  onImport,
   onCopyMarkdown,
   onCopyAll,
   onUpdateMeta,
@@ -241,7 +245,18 @@ export function SidePanel({
         </button>
         <button onClick={onCopyAll}>Copy All</button>
         <button onClick={onExport} disabled={chosenCount === 0}>
-          Export JSON
+          Export
+        </button>
+      </div>
+      <div className="sp-actions">
+        <button
+          onClick={onExportFull}
+          title="Save full throughline as a .throughline.json file"
+        >
+          Save file
+        </button>
+        <button onClick={onImport} title="Load a .throughline.json file">
+          Load file
         </button>
       </div>
 
