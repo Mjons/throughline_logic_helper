@@ -57,7 +57,6 @@ class ClaudeClient implements LLMClient {
       body: JSON.stringify({
         model: options?.model ?? DEFAULT_MODELS.claude,
         max_tokens: options?.maxTokens ?? 4096,
-        temperature: options?.temperature ?? 0.7,
         ...(systemPrompt ? { system: systemPrompt } : {}),
         messages: chatMessages,
       }),
@@ -97,7 +96,6 @@ class ClaudeClient implements LLMClient {
       body: JSON.stringify({
         model: options?.model ?? DEFAULT_MODELS.claude,
         max_tokens: options?.maxTokens ?? 4096,
-        temperature: options?.temperature ?? 0.7,
         stream: true,
         ...(systemPrompt ? { system: systemPrompt } : {}),
         messages: chatMessages,
