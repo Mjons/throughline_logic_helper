@@ -567,10 +567,6 @@ export default function App() {
     [pendingFrameworkId],
   );
 
-  const handleSwitchFramework = useCallback((id: string) => {
-    setPendingFrameworkId(id);
-  }, []);
-
   // --- Blank template + management ---
 
   const handleNewBlankTemplate = useCallback(
@@ -1269,7 +1265,6 @@ export default function App() {
                 progress={genProgress}
                 frameworkSelection={frameworkSelection}
                 onConfirmFramework={handleConfirmFramework}
-                onSwitchFramework={handleSwitchFramework}
                 awaitingConfirmation={awaitingConfirmation}
                 model={llmSettings?.model}
               />

@@ -7,7 +7,6 @@ import {
 } from "../lib/prompts";
 import {
   type UserCorpus,
-  type ExtractedFact,
   type CoverageDimension,
   type CoverageStatus,
   genId,

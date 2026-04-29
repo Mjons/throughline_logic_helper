@@ -23,7 +23,6 @@ type Props = {
   progress: GenerationProgress | null;
   frameworkSelection: FrameworkSelection | null;
   onConfirmFramework: (overrideId?: string) => void;
-  onSwitchFramework: (id: string) => void;
   awaitingConfirmation: boolean;
   model?: string;
 };
@@ -40,7 +39,6 @@ export function IngestPanel({
   progress,
   frameworkSelection,
   onConfirmFramework,
-  onSwitchFramework,
   awaitingConfirmation,
   model,
 }: Props) {

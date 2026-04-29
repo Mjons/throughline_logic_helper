@@ -1,6 +1,12 @@
 import type { LLMClient } from "./llm-client";
 import type { UserCorpus } from "./corpus";
-import type { ToneLevel, BeatOption, Beat, OptionSource } from "../types";
+import type {
+  Template,
+  ToneLevel,
+  BeatOption,
+  Beat,
+  OptionSource,
+} from "../types";
 import type { FrameworkDefinition } from "./template-selector";
 import {
   GENERATE_BEAT,

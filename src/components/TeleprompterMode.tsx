@@ -29,34 +29,33 @@ function buildSlides(
   selections: Record<string, string>,
   overrides: TemplateOverrides,
 ): SlideData[] {
-  return template.beats
-    .map((beat, i) => {
-      const selId = selections[beat.id];
-      const option = beat.options.find((o) => o.id === selId);
-      if (!option) return null;
+  const slides: SlideData[] = [];
+  template.beats.forEach((beat, i) => {
+    const selId = selections[beat.id];
+    const option = beat.options.find((o) => o.id === selId);
+    if (!option) return;
 
-      const oc = overrides[beat.id]?.cluster;
-      const oo = overrides[beat.id]?.options?.[option.id];
+    const oc = overrides[beat.id]?.cluster;
+    const oo = overrides[beat.id]?.options?.[option.id];
 
-      const beatName = oc?.name ?? beat.name;
-      const beatSubtitle =
-        oc?.subtitle !== undefined ? oc.subtitle : beat.subtitle;
-      const optionTitle = oo?.title ?? option.title;
-      const optionDesc =
-        oo?.description !== undefined ? oo.description : option.description;
+    const beatName = oc?.name ?? beat.name;
+    const beatSubtitle =
+      oc?.subtitle !== undefined ? oc.subtitle : beat.subtitle;
+    const optionTitle = oo?.title ?? option.title;
+    const optionDesc =
+      oo?.description !== undefined ? oo.description : option.description;
 
-      // Prefer spokenLine, fall back to description, then title
-      const spokenLine = option.spokenLine || optionDesc || optionTitle;
+    const spokenLine = option.spokenLine || optionDesc || optionTitle;
 
-      return {
-        beatIndex: i,
-        beatName,
-        beatSubtitle,
-        optionTitle,
-        spokenLine,
-      };
-    })
-    .filter((s): s is SlideData => s !== null);
+    slides.push({
+      beatIndex: i,
+      beatName,
+      beatSubtitle,
+      optionTitle,
+      spokenLine,
+    });
+  });
+  return slides;
 }
 
 export function TeleprompterMode({
