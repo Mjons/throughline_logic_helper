@@ -48,7 +48,7 @@ export function TopBar({
     <header className="top-bar">
       <div className="tb-left">
         <h1>Throughline</h1>
-        {active ? <span className="tb-sub">{active.description}</span> : null}
+        <span className="tb-sub">AI-powered narrative architect</span>
       </div>
       <div className="tb-tools">
         <div className="tb-select-group">
